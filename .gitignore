@@ -1,0 +1,43 @@
+# ===== 系统文件 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 编辑器/IDE =====
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# ===== 节点/依赖（如果未来引入） =====
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ===== 构建产物 =====
+dist/
+build/
+*.min.js.map
+
+# ===== 环境变量 / 密钥 =====
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets.*
+config.local.*
+
+# ===== 日志 =====
+logs/
+*.log
+
+# ===== 临时文件 =====
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
