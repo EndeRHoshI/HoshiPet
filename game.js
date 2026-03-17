@@ -19,14 +19,42 @@ const CAT_POOL = [
   { emoji:'🐾', breed:'缅因猫',  rarity:'rare',   traits:'体型巨大，温柔巨人' },
 ];
 
+const ITEM_CATEGORIES = {
+  food:    { label: '🍱 食品类', functional: false },
+  drink:   { label: '🐧 饮料类', functional: false },
+  hygiene: { label: '🛁 洗澡清洁', functional: false },
+  health:  { label: '💊 健康医疗', functional: false },
+  fun:     { label: '🎮 娱乐玩具', functional: false },
+  special: { label: '✨ 特殊道具', functional: true },
+};
+
 const ITEMS = [
-  { id:'fish',     icon:'🐟', name:'鱼罐头',    desc:'饱食 +35',       price:10,  effect:{ satiety:35 } },
-  { id:'water',    icon:'💦', name:'矿泉水',    desc:'水分 +40',       price:5,   effect:{ thirst:40 } },
-  { id:'soap',     icon:'🧴', name:'香波沐浴露', desc:'清洁 +50',       price:15,  effect:{ cleanliness:50 } },
-  { id:'medicine', icon:'💊', name:'猫咪保健品', desc:'健康 +30',       price:20,  effect:{ health:30 } },
-  { id:'toy',      icon:'🎀', name:'逗猫棒',    desc:'心情 +40',       price:12,  effect:{ mood:40 } },
-  { id:'rename',   icon:'📛', name:'改名卡',    desc:'可以重新命名猫咪', price:30,  effect:{ rename:true } },
-  { id:'revive',   icon:'💌', name:'复活卡',    desc:'复活失去的好朋友', price:100, effect:{ revive:true } },
+  // 食品类
+  { id:'snack',    cat:'food',    icon:'🫙', name:'小零食',        desc:'饱食 +20',          price:4,   effect:{ satiety:20 } },
+  { id:'fish',     cat:'food',    icon:'🐟', name:'鱼罐头',        desc:'饱食 +35',          price:10,  effect:{ satiety:35 } },
+  { id:'chicken',  cat:'food',    icon:'🍗', name:'烤鸡腿',        desc:'饱食 +60',          price:20,  effect:{ satiety:60 } },
+  { id:'steak',    cat:'food',    icon:'🥩', name:'生牛肉大餐',    desc:'饱食 +90 健康 +10', price:40,  effect:{ satiety:90, health:10 } },
+  // 饮料类
+  { id:'water',    cat:'drink',   icon:'💧', name:'矿泉水',        desc:'水分 +40',          price:5,   effect:{ thirst:40 } },
+  { id:'milk',     cat:'drink',   icon:'🥛', name:'纯牛奶',        desc:'水分 +50 健康 +5',  price:12,  effect:{ thirst:50, health:5 } },
+  { id:'juice',    cat:'drink',   icon:'🧃', name:'营养果汁',      desc:'水分 +70 心情 +10', price:18,  effect:{ thirst:70, mood:10 } },
+  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫和草茶',      desc:'水分 +55 心情 +20', price:25,  effect:{ thirst:55, mood:20 } },
+  // 洗澡清洁
+  { id:'soap',     cat:'hygiene', icon:'🧴', name:'香皏',          desc:'清洁 +25',          price:5,   effect:{ cleanliness:25 } },
+  { id:'brush',    cat:'hygiene', icon:'🪷', name:'牙刷套装',      desc:'清洁 +35',          price:8,   effect:{ cleanliness:35 } },
+  { id:'shampoo',  cat:'hygiene', icon:'🧴', name:'香波沐浴露',    desc:'清洁 +55',          price:15,  effect:{ cleanliness:55 } },
+  { id:'spa',      cat:'hygiene', icon:'🛁', name:'豪华 SPA 套装', desc:'清洁 +100',         price:35,  effect:{ cleanliness:100 } },
+  // 健康医疗
+  { id:'bandage',  cat:'health',  icon:'🩹', name:'创可贴',        desc:'健康 +15',          price:8,   effect:{ health:15 } },
+  { id:'medicine', cat:'health',  icon:'💊', name:'猫和保健品',    desc:'健康 +30',          price:20,  effect:{ health:30 } },
+  { id:'vaccine',  cat:'health',  icon:'💉', name:'猫和疫苗',      desc:'健康 +60',          price:45,  effect:{ health:60 } },
+  // 娱乐玩具
+  { id:'plush',    cat:'fun',     icon:'🧸', name:'毛绒玩具',      desc:'心情 +25',          price:8,   effect:{ mood:25 } },
+  { id:'toy',      cat:'fun',     icon:'🎀', name:'逗猫棒',        desc:'心情 +40',          price:12,  effect:{ mood:40 } },
+  { id:'toyset',   cat:'fun',     icon:'🎈', name:'猫和玩具套装',  desc:'心情 +70',          price:28,  effect:{ mood:70 } },
+  // 特殊道具
+  { id:'rename',   cat:'special', icon:'📛', name:'改名卡',        desc:'可以重新命名猫和',  price:30,  effect:{ rename:true } },
+  { id:'revive',   cat:'special', icon:'💌', name:'复活卡',        desc:'复活失去的好朋友',  price:100, effect:{ revive:true } },
 ];
 
 const TRIP_EVENTS = [
@@ -40,10 +68,23 @@ const TRIP_EVENTS = [
   { text:'被一条大狗吓到了，撒腿就跑！', mood:-10 },
 ];
 
+const PROFESSIONS = [
+  // Tier 1 — 无前置要求
+  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'守卫家园，防止小偷入侵',       learnTicks:8,  wage:4,  req:[], tier:1 },
+  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'猫咪咖啡店，为客人端茶送水',   learnTicks:12, wage:7,  req:[], tier:1 },
+  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'专业捕猎,守护粮仓不让鼠辈猖狂', learnTicks:18, wage:11, req:[], tier:1 },
+  // Tier 2 — 需前置
+  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'湖边垂钓，以渔为生',           learnTicks:28, wage:16, req:['hunter'],           tier:2 },
+  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'调查神秘案件，追踪可疑线索',   learnTicks:45, wage:24, req:['barista'],           tier:2 },
+  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'猫咪星级餐厅掌厨料理大师',     learnTicks:38, wage:20, req:['barista','hunter'], tier:2 },
+  // Tier 3 — 高级
+  { id:'accountant', icon:'📊', name:'理财顾问', desc:'帮猫咪们规划财富，稳健投资',   learnTicks:75, wage:38, req:['detective','fisher'], tier:3 },
+];
+
 // ---------- 全局状态 ----------
 let gs = null;
 let tickTimer = null;
-let tickMs = 3000;
+let tickMs = 30000;
 let isPaused = false;
 let logs = [];
 let selectedCatCard = null;
@@ -119,16 +160,23 @@ function applyDecay(withEvents = true) {
   if (gs.state === 'trip') md += 0.3;
   gs.mood = clamp(gs.mood + md, 100);
 
-  // Work earnings — every 8 ticks (24s default), base 3 + skill bonus
+  // Work earnings — every 8 ticks, based on current job
   if (gs.state === 'work' && gs.ticks > 0 && gs.ticks % 8 === 0) {
-    const earned = 3 + Math.floor(gs.skillPoints / 5);
+    const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
+    const earned = job ? job.wage : 3;
     gs.gold += earned;
-    if (withEvents) addLog(`🛠️ ${gs.name} 打完一份工，赚到 ${earned} 金币！`);
+    if (withEvents) addLog(`${job ? job.icon : '🛠️'} ${gs.name} 完成了一轮【${job ? job.name : '零工'}】，赚到 ${earned} 金币！`);
   }
-  // Study skill points — every 15 ticks
-  if (gs.state === 'study' && gs.ticks > 0 && gs.ticks % 15 === 0) {
-    gs.skillPoints++;
-    if (withEvents) addLog(`📚 ${gs.name} 学习进步！技能点 +1（共 ${gs.skillPoints} 点，每5点增加1金/轮）`);
+  // Study: increment study progress for chosen profession
+  if (gs.state === 'study' && gs.studyingProfessionId) {
+    gs.studyProgress = (gs.studyProgress || 0) + 1;
+    const prof = PROFESSIONS.find(p => p.id === gs.studyingProfessionId);
+    if (prof && gs.studyProgress >= prof.learnTicks) {
+      gs.learnedProfessions[prof.id] = true;
+      gs.studyingProfessionId = null;
+      gs.studyProgress = 0;
+      if (withEvents) addLog(`🎓 ${gs.name} 学成了「${prof.icon}${prof.name}」！现在可以去下广迎了！`);
+    }
   }
   // Trip events
   if (gs.state === 'trip') {
@@ -227,9 +275,10 @@ function adoptCat() {
   gs = {
     cat: selectedCatData, name,
     adoptTime: Date.now(), lastSaveTime: Date.now(),
-    ticks: 0, gold: 50, skillPoints: 0, tripTicks: 0,
+    ticks: 0, gold: 50, tripTicks: 0,
     satiety: 100, thirst: 100, cleanliness: 100, health: 100, mood: 100,
     state: 'idle', inventory: {}, isDead: false,
+    learnedProfessions: {}, studyingProfessionId: null, studyProgress: 0, currentJobId: null,
   };
   logs = [];
   addLog(`🎉 ${name} 来到了新家，它看起来很开心！`);
@@ -283,15 +332,25 @@ function updateUI() {
   // Mood text
   document.getElementById('moodLine').textContent = getMoodText();
 
+  // Gold in home scene
+  const goldEls = document.querySelectorAll('.home-gold-val');
+  goldEls.forEach(el => el.textContent = gs.gold);
+  document.getElementById('shopGoldVal').textContent = gs.gold;
+
+  // Cat state image
+  const catImgs = { idle:'assets/cat_idle.png', work:'assets/cat_work.png', study:'assets/cat_study.png', trip:'assets/cat_trip.png' };
+  const catImgEl = document.getElementById('catStateImg');
+  if (catImgEl) {
+    catImgEl.src = catImgs[gs.state] || catImgs.idle;
+    catImgEl.className = 'cat-img cat-anim-' + (gs.state || 'idle');
+  }
+
   // State badge
   const badges = { idle:'😴', work:'🛠️', study:'📚', trip:'🌳' };
   document.getElementById('stateBadge').textContent = gs.isDead ? '💀' : (badges[gs.state] || '😴');
 
-  // Skill info
-  const lv = 1 + Math.floor(gs.skillPoints / 5);
-  const gpm = 3 + Math.floor(gs.skillPoints / 5);
-  document.getElementById('skillInfo').textContent =
-    `技能 Lv.${lv} ｜ 打工 ${gpm}金/轮（每8tick）｜ 技能点 ${gs.skillPoints}`;
+  // Profession info bar
+  updateProfessionUI();
 
   updateStateButtons();
   renderInventory('inventoryList');
@@ -330,6 +389,7 @@ function switchScene(name) {
     document.getElementById('scene' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
     document.getElementById('nav' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
   });
+  document.body.className = `bg-${name}`;
   renderInventory('inventoryList');
   renderInventory('inventoryListHome');
 }
@@ -350,29 +410,100 @@ function setState(newState) {
 
 // ---------- 商城 ----------
 function renderShopGrid() {
-  const grid = document.getElementById('shopGrid');
-  grid.innerHTML = ITEMS.map(item => `
-    <div class="shop-item" onclick="buyItem('${item.id}')">
-      <span class="item-icon">${item.icon}</span>
-      <div class="item-name">${item.name}</div>
-      <div class="item-desc">${item.desc}</div>
-      <div class="item-price">🪙 ${item.price}</div>
-    </div>`).join('');
+  const container = document.getElementById('shopGrid');
+  const catOrder = ['food','drink','hygiene','health','fun','special'];
+  container.innerHTML = catOrder.map(catKey => {
+    const catItems = ITEMS.filter(i => i.cat === catKey);
+    if (!catItems.length) return '';
+    const { label } = ITEM_CATEGORIES[catKey];
+    const grid = catItems.map(item => `
+      <div class="shop-item" onclick="buyItem('${item.id}')">
+        <span class="item-icon">${item.icon}</span>
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        <div class="item-price">🪴 ${item.price}</div>
+      </div>`).join('');
+    return `<div class="shop-cat-title">${label}</div>
+            <div class="shop-grid">${grid}</div>`;
+  }).join('');
 }
+
+let _buyItemId = null;
 
 function buyItem(id) {
   const item = ITEMS.find(i => i.id === id);
   if (!item) return;
-  if (gs.gold < item.price) {
-    showModal('💸','金币不足！',`购买 ${item.name} 需要 ${item.price} 金币，当前只有 ${gs.gold} 枚~`,[{label:'好吧',fn:closeModal}]);
-    return;
+  _buyItemId = id;
+  const canAfford = Math.floor(gs.gold / item.price);
+  const maxQty = Math.min(Math.max(canAfford, 1), 99);
+
+  const bodyHtml = `
+    <div style="color:#a0522d;font-size:13px;margin-bottom:14px">${item.desc} &nbsp;·&nbsp; 单价 🪙${item.price}</div>
+    <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:14px">
+      <button onclick="adjustBuyQty(-1)"
+        style="width:34px;height:34px;border-radius:50%;border:2px solid #fce4d6;background:#fff8f4;
+               font-size:20px;line-height:1;cursor:pointer;font-weight:900;color:#e17055">－</button>
+      <input type="range" id="buyQtySlider" min="1" max="${maxQty}" value="1"
+        style="width:110px;accent-color:#ff6b6b"
+        oninput="syncBuyQty()">
+      <button onclick="adjustBuyQty(1)"
+        style="width:34px;height:34px;border-radius:50%;border:2px solid #fce4d6;background:#fff8f4;
+               font-size:20px;line-height:1;cursor:pointer;font-weight:900;color:#e17055">＋</button>
+    </div>
+    <div style="font-size:22px;font-weight:900;color:#6b3a2a;margin-bottom:4px">
+      数量：<span id="buyQtyNum">1</span>
+    </div>
+    <div style="font-size:15px;font-weight:700;color:#e17055">
+      合计：🪙 <span id="buyTotalNum">${item.price}</span>
+    </div>
+    ${canAfford < 1 ? '<div style="color:#e17055;font-size:12px;margin-top:8px">⚠️ 金币不足，无法购买</div>' : ''}
+  `;
+
+  showModal(item.icon, `购买 ${item.name}`, bodyHtml,
+    canAfford >= 1
+      ? [{ label:'✅ 确认购买', cls:'btn-primary', fn: confirmBuyItem },
+         { label:'取消', fn: closeModalDirect }]
+      : [{ label:'好吧', fn: closeModalDirect }]
+  );
+}
+
+function adjustBuyQty(delta) {
+  const s = document.getElementById('buyQtySlider');
+  if (!s) return;
+  s.value = Math.max(1, Math.min(parseInt(s.max), parseInt(s.value) + delta));
+  syncBuyQty();
+}
+
+function syncBuyQty() {
+  const s = document.getElementById('buyQtySlider');
+  const item = ITEMS.find(i => i.id === _buyItemId);
+  if (!s || !item) return;
+  const qty = parseInt(s.value);
+  const qEl = document.getElementById('buyQtyNum');
+  const tEl = document.getElementById('buyTotalNum');
+  if (qEl) qEl.textContent = qty;
+  if (tEl) tEl.textContent = qty * item.price;
+}
+
+function confirmBuyItem() {
+  const s = document.getElementById('buyQtySlider');
+  const item = ITEMS.find(i => i.id === _buyItemId);
+  if (!s || !item) { closeModalDirect(); return; }
+  const qty = parseInt(s.value);
+  const total = qty * item.price;
+  if (gs.gold < total) {
+    addLog(`💸 金币不足（需要 ${total}，只有 ${gs.gold}）`);
+    closeModalDirect(); return;
   }
-  gs.gold -= item.price;
-  gs.inventory[id] = (gs.inventory[id] || 0) + 1;
-  addLog(`🛒 购买了 ${item.icon}${item.name}，已存入背包`);
+  gs.gold -= total;
+  gs.inventory[_buyItemId] = (gs.inventory[_buyItemId] || 0) + qty;
+  addLog(`🛒 购买了 ${item.icon}${item.name} ×${qty}，花费 🪙${total}`);
   updateUI();
   saveGame();
+  closeModalDirect();
+  _buyItemId = null;
 }
+
 
 function useItem(id) {
   const item = ITEMS.find(i => i.id === id);
@@ -409,11 +540,11 @@ function useItem(id) {
 function renderInventory(containerId) {
   const list = document.getElementById(containerId);
   if (!list || !gs) return;
-  const consumables = ITEMS.filter(i => !i.effect.rename && !i.effect.revive);
-  const functional  = ITEMS.filter(i =>  i.effect.rename ||  i.effect.revive);
-
-  function renderGroup(title, items) {
-    const entries = items.map(item => {
+  const catOrder = ['food','drink','hygiene','health','fun','special'];
+  let html = '';
+  catOrder.forEach(catKey => {
+    const catItems = ITEMS.filter(i => i.cat === catKey);
+    const entries = catItems.map(item => {
       const count = gs.inventory[item.id] || 0;
       if (!count) return '';
       return `<div class="inv-item">
@@ -422,11 +553,9 @@ function renderInventory(containerId) {
         <button class="btn btn-sm btn-ghost" onclick="useItem('${item.id}')">使用</button>
       </div>`;
     }).filter(Boolean);
-    if (!entries.length) return '';
-    return `<div class="inv-category">${title}</div>` + entries.join('');
-  }
-
-  const html = renderGroup('🍱 消耗品', consumables) + renderGroup('🔧 功能道具', functional);
+    if (!entries.length) return;
+    html += `<div class="inv-category">${ITEM_CATEGORIES[catKey].label}</div>` + entries.join('');
+  });
   list.innerHTML = html || '<div class="inv-empty">背包空空如也，去商城买些东西吧~</div>';
 }
 
@@ -474,30 +603,33 @@ function confirmDeletePet() {
         initAdoptScreen();
         document.getElementById('catNameInput').value = '';
         selectedCatData = null;
-        closeModal();
+        closeModalDirect();
       }},
-     {label:'取消', fn:closeModal}
+     {label:'取消', fn:closeModalDirect}
     ]);
 }
 
 // ---------- 复活宠物 ----------
 function revivePet() {
-  if (!gs.isDead) { showModal('🐱','宠物好好的！','不需要复活哦~',[{label:'好的',fn:closeModal}]); return; }
+  if (!gs.isDead) { showModal('🐱','宠物好好的！','不需要复活哦~',[{label:'好的',fn:closeModalDirect}]); return; }
   const hasCard = gs.inventory['revive'] && gs.inventory['revive'] > 0;
-  if (!hasCard) { showModal('💔','没有复活卡','去商城购买复活卡再来吧~',[{label:'好的',fn:closeModal}]); return; }
+  if (!hasCard) { showModal('💔','没有复活卡','去商城购买复活卡再来吧~',[{label:'好的',fn:closeModalDirect}]); return; }
   useItem('revive');
 }
 
-// ---------- 技能说明 ----------
+// ---------- 职业说明 ----------
 function showSkillInfo() {
-  showModal('📚','技能系统说明',
+  showModal('📚','职业系统说明',
     `<div style="text-align:left;line-height:1.9;font-size:13px">
-      🎓 <b>技能点</b> 通过让猫咪「学习」来积累<br>
-      ⚡ 每 <b>15 ticks</b> 学习可获得 1 技能点<br>
-      🛠️ 打工收益 = <b>3 + ⌊技能点 ÷ 5⌋</b> 金币/轮<br>
-      📈 每攒满 5 技能点，打工额外 +1 金币<br>
-      🏆 技能等级 = 1 + ⌊技能点 ÷ 5⌋<br><br>
-      💡 建议先「学习」积累技能点，再「打工」赚更多钱！
+      🎓 <b>学习阶段</b><br>
+      选择一门职业开始学习。挂机满对应 Tick 数即可出师。<br>
+      <br>
+      💼 <b>打工阶段</b><br>
+      出师后，可以在打工时选择该职业上岗。<br>
+      每 <b>8个 Tick</b> 结算一次工资，高阶职业赚得更多！<br>
+      <br>
+      📈 <b>晋级之路</b><br>
+      某些高级职业（如星级厨师、理财顾问）需要先学会基础职业才能解锁。
     </div>`,
     [{label:'明白了！', cls:'btn-primary', fn:closeModalDirect}]
   );
@@ -539,9 +671,86 @@ function renderLog() {
     .map((t, i) => `<div class="log-entry" style="opacity:${Math.max(0.25, 1 - i*0.04)}">${t}</div>`).join('');
 }
 
+// ---------- 职业 UI ----------
+function updateProfessionUI() {
+  if (!gs) return;
+  const panel = document.getElementById('professionPanel');
+  if (!panel) return;
+
+  if (gs.state === 'study') {
+    // Show all professions: locked / studying / unlocked
+    const studying = gs.studyingProfessionId ? PROFESSIONS.find(p => p.id === gs.studyingProfessionId) : null;
+    panel.innerHTML = `
+      <div class="prof-panel-title">📚 选择要学习的职业</div>
+      ${studying ? `<div class="study-progress-bar-wrap">
+        <div class="study-prog-label">${studying.icon} 正在学习「${studying.name}」…&nbsp;
+          <span>${gs.studyProgress}/${studying.learnTicks} tick</span></div>
+        <div class="study-prog-bg"><div class="study-prog-fill" style="width:${Math.min(100,(gs.studyProgress/studying.learnTicks)*100).toFixed(1)}%"></div></div>
+      </div>` : ''}
+      <div class="prof-grid">${PROFESSIONS.map(p => {
+        const learned  = gs.learnedProfessions[p.id];
+        const isStudying = gs.studyingProfessionId === p.id;
+        const reqMet   = p.req.every(r => gs.learnedProfessions[r]);
+        const canStudy = !learned && !isStudying && reqMet;
+        const reqNames = p.req.map(r => PROFESSIONS.find(pp => pp.id === r)?.name || r).join('、');
+        return `<div class="prof-card ${learned?' prof-learned':''} ${isStudying?' prof-studying':''} ${!reqMet&&!learned?' prof-locked':''}"
+          onclick="${canStudy ? `selectStudyProfession('${p.id}')` : ''}">
+          <div class="prof-icon">${p.icon}</div>
+          <div class="prof-name">${p.name}</div>
+          <div class="prof-desc">${learned?'✅ 已掌握': isStudying?'📖 学习中': !reqMet?`🔒 需先学：${reqNames}`: `⏱ ${p.learnTicks} tick`}</div>
+          <div class="prof-wage">打工赏金 ${p.wage}金/轮</div>
+        </div>`;
+      }).join('')}</div>`;
+  } else if (gs.state === 'work') {
+    const learned = PROFESSIONS.filter(p => gs.learnedProfessions[p.id]);
+    panel.innerHTML = `
+      <div class="prof-panel-title">🛠️ 选择打工职业</div>
+      ${learned.length === 0
+        ? `<div class="prof-empty">还没有掌握任何职业，先去「学习」状态学习吧！目前只能做<b>零工（3金/轮）</b>。</div>`
+        : `<div class="prof-grid">${PROFESSIONS.filter(p => p.req.every(r=>true) || learned).map(p => {
+            if (!gs.learnedProfessions[p.id]) return '';
+            const active = gs.currentJobId === p.id;
+            return `<div class="prof-card ${active?' prof-active':''}" onclick="selectJob('${p.id}')">
+              <div class="prof-icon">${p.icon}</div>
+              <div class="prof-name">${p.name}</div>
+              <div class="prof-desc">${p.desc}</div>
+              <div class="prof-wage">${active?'✅ 当前职业':''} ${p.wage}金/轮</div>
+            </div>`;
+          }).join('')}</div>`}`;
+  } else {
+    panel.innerHTML = '';
+  }
+}
+
+function selectStudyProfession(id) {
+  const prof = PROFESSIONS.find(p => p.id === id);
+  if (!prof || gs.learnedProfessions[id]) return;
+  const reqMet = prof.req.every(r => gs.learnedProfessions[r]);
+  if (!reqMet) { addLog(`🔒 需要先学会：${prof.req.map(r=>PROFESSIONS.find(p=>p.id===r)?.name).join('、')}`); return; }
+  gs.studyingProfessionId = id;
+  gs.studyProgress = 0;
+  addLog(`📖 ${gs.name} 开始学习「${prof.icon}${prof.name}」，需要 ${prof.learnTicks} tick！`);
+  updateProfessionUI();
+  saveGame();
+}
+
+function selectJob(id) {
+  if (!gs.learnedProfessions[id]) return;
+  const prof = PROFESSIONS.find(p => p.id === id);
+  gs.currentJobId = id;
+  addLog(`💼 ${gs.name} 上岗了「${prof.icon}${prof.name}」，赏金 ${prof.wage}金/轮！`);
+  updateProfessionUI();
+  saveGame();
+}
+
 // ---------- 入口 ----------
 window.addEventListener('DOMContentLoaded', () => {
   if (loadGame()) {
+    // Migrate old saves that don't have profession fields
+    if (!gs.learnedProfessions) gs.learnedProfessions = {};
+    if (gs.studyingProfessionId === undefined) gs.studyingProfessionId = null;
+    if (gs.studyProgress === undefined) gs.studyProgress = 0;
+    if (gs.currentJobId === undefined) gs.currentJobId = null;
     applyOfflineTicks();
     launchGame();
   } else {
@@ -555,3 +764,4 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('tickSlider').value = tickMs / 1000;
   document.getElementById('tickRateLabel').textContent = `当前：${tickMs/1000}秒/tick`;
 });
+
