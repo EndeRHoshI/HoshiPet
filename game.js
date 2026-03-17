@@ -428,80 +428,18 @@ function renderShopGrid() {
   }).join('');
 }
 
-let _buyItemId = null;
-
 function buyItem(id) {
   const item = ITEMS.find(i => i.id === id);
   if (!item) return;
-  _buyItemId = id;
-  const canAfford = Math.floor(gs.gold / item.price);
-  const maxQty = Math.min(Math.max(canAfford, 1), 99);
-
-  const bodyHtml = `
-    <div style="color:#a0522d;font-size:13px;margin-bottom:14px">${item.desc} &nbsp;·&nbsp; 单价 🪙${item.price}</div>
-    <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:14px">
-      <button onclick="adjustBuyQty(-1)"
-        style="width:34px;height:34px;border-radius:50%;border:2px solid #fce4d6;background:#fff8f4;
-               font-size:20px;line-height:1;cursor:pointer;font-weight:900;color:#e17055">－</button>
-      <input type="range" id="buyQtySlider" min="1" max="${maxQty}" value="1"
-        style="width:110px;accent-color:#ff6b6b"
-        oninput="syncBuyQty()">
-      <button onclick="adjustBuyQty(1)"
-        style="width:34px;height:34px;border-radius:50%;border:2px solid #fce4d6;background:#fff8f4;
-               font-size:20px;line-height:1;cursor:pointer;font-weight:900;color:#e17055">＋</button>
-    </div>
-    <div style="font-size:22px;font-weight:900;color:#6b3a2a;margin-bottom:4px">
-      数量：<span id="buyQtyNum">1</span>
-    </div>
-    <div style="font-size:15px;font-weight:700;color:#e17055">
-      合计：🪙 <span id="buyTotalNum">${item.price}</span>
-    </div>
-    ${canAfford < 1 ? '<div style="color:#e17055;font-size:12px;margin-top:8px">⚠️ 金币不足，无法购买</div>' : ''}
-  `;
-
-  showModal(item.icon, `购买 ${item.name}`, bodyHtml,
-    canAfford >= 1
-      ? [{ label:'✅ 确认购买', cls:'btn-primary', fn: confirmBuyItem },
-         { label:'取消', fn: closeModalDirect }]
-      : [{ label:'好吧', fn: closeModalDirect }]
-  );
-}
-
-function adjustBuyQty(delta) {
-  const s = document.getElementById('buyQtySlider');
-  if (!s) return;
-  s.value = Math.max(1, Math.min(parseInt(s.max), parseInt(s.value) + delta));
-  syncBuyQty();
-}
-
-function syncBuyQty() {
-  const s = document.getElementById('buyQtySlider');
-  const item = ITEMS.find(i => i.id === _buyItemId);
-  if (!s || !item) return;
-  const qty = parseInt(s.value);
-  const qEl = document.getElementById('buyQtyNum');
-  const tEl = document.getElementById('buyTotalNum');
-  if (qEl) qEl.textContent = qty;
-  if (tEl) tEl.textContent = qty * item.price;
-}
-
-function confirmBuyItem() {
-  const s = document.getElementById('buyQtySlider');
-  const item = ITEMS.find(i => i.id === _buyItemId);
-  if (!s || !item) { closeModalDirect(); return; }
-  const qty = parseInt(s.value);
-  const total = qty * item.price;
-  if (gs.gold < total) {
-    addLog(`💸 金币不足（需要 ${total}，只有 ${gs.gold}）`);
-    closeModalDirect(); return;
+  if (gs.gold < item.price) {
+    showModal('💸','金币不足！',`购买 ${item.name} 需要 ${item.price} 金币，当前只有 ${gs.gold} 枚~`,[{label:'好吧',fn:closeModalDirect}]);
+    return;
   }
-  gs.gold -= total;
-  gs.inventory[_buyItemId] = (gs.inventory[_buyItemId] || 0) + qty;
-  addLog(`🛒 购买了 ${item.icon}${item.name} ×${qty}，花费 🪙${total}`);
+  gs.gold -= item.price;
+  gs.inventory[id] = (gs.inventory[id] || 0) + 1;
+  addLog(`🛒 购买了 ${item.icon}${item.name}，已存入背包`);
   updateUI();
   saveGame();
-  closeModalDirect();
-  _buyItemId = null;
 }
 
 
@@ -584,9 +522,9 @@ function showRenameModal() {
           gs.inventory['rename']--;
           if (!gs.inventory['rename']) delete gs.inventory['rename'];
           addLog(`📛 改名成功！新名字：${gs.name}`);
-          updateUI(); saveGame(); closeModal();
-        }}, {label:'取消',fn:closeModal}]
-      : [{label:'好的',fn:closeModal}]
+          updateUI(); saveGame(); closeModalDirect();
+        }}, {label:'取消',fn:closeModalDirect}]
+      : [{label:'好的',fn:closeModalDirect}]
   );
 }
 
@@ -702,12 +640,12 @@ function updateProfessionUI() {
         </div>`;
       }).join('')}</div>`;
   } else if (gs.state === 'work') {
-    const learned = PROFESSIONS.filter(p => gs.learnedProfessions[p.id]);
+    const learnedCount = Object.keys(gs.learnedProfessions).filter(k => gs.learnedProfessions[k]).length;
     panel.innerHTML = `
       <div class="prof-panel-title">🛠️ 选择打工职业</div>
-      ${learned.length === 0
+      ${learnedCount === 0
         ? `<div class="prof-empty">还没有掌握任何职业，先去「学习」状态学习吧！目前只能做<b>零工（3金/轮）</b>。</div>`
-        : `<div class="prof-grid">${PROFESSIONS.filter(p => p.req.every(r=>true) || learned).map(p => {
+        : `<div class="prof-grid">${PROFESSIONS.map(p => {
             if (!gs.learnedProfessions[p.id]) return '';
             const active = gs.currentJobId === p.id;
             return `<div class="prof-card ${active?' prof-active':''}" onclick="selectJob('${p.id}')">
