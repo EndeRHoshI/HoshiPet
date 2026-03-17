@@ -180,6 +180,10 @@ input[type="text"]:focus { border-color:var(--primary); }
 .mood-line      { font-size:15px; margin-top:4px; }
 
 /* Stat bars */
+.offline-notice {
+  background:linear-gradient(135deg,#a29bfe,#6c5ce7); border-radius:14px;
+  padding:10px 14px; color:#fff; font-size:12px; margin-bottom:12px; display:none;
+}
 .stat-row       { margin-bottom:10px; }
 .stat-row:last-child { margin-bottom:0; }
 .stat-label     { display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:4px; }
@@ -348,6 +352,13 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
               <div class="mood-line"    id="moodLine">😊 心情不错</div>
             </div>
           </div>
+        </div>
+
+        <!-- 离线收益提示 -->
+        <div id="offlineNotice" class="offline-notice" style="display:none">
+          <div style="font-weight:700;margin-bottom:3px">✨ 欢迎回来！</div>
+          <div id="offlineText"></div>
+          <button class="btn btn-sm btn-ghost" style="margin-top:8px;color:#333" onclick="this.parentElement.style.display='none'">知道啦</button>
         </div>
 
         <!-- 五维 -->
