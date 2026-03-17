@@ -314,7 +314,9 @@ function updateUI() {
   setBar('mood',       gs.mood);
 
   // Avatar
-  document.getElementById('gameAvatar').textContent = gs.cat.emoji;
+  const av = document.getElementById('gameAvatar');
+  if (av) av.textContent = gs.cat.emoji;
+  
   document.getElementById('gameNameDisplay').textContent = gs.name;
   document.getElementById('breedTag').textContent = gs.cat.breed;
 
