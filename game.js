@@ -684,13 +684,20 @@ function selectJob(id) {
 // ---------- 入口 ----------
 window.addEventListener('DOMContentLoaded', () => {
   if (loadGame()) {
-    // Migrate old saves that don't have profession fields
-    if (!gs.learnedProfessions) gs.learnedProfessions = {};
-    if (gs.studyingProfessionId === undefined) gs.studyingProfessionId = null;
-    if (gs.studyProgress === undefined) gs.studyProgress = 0;
-    if (gs.currentJobId === undefined) gs.currentJobId = null;
-    applyOfflineTicks();
-    launchGame();
+    try {
+      // Migrate old saves that don't have profession fields
+      if (!gs.learnedProfessions) gs.learnedProfessions = {};
+      if (gs.studyingProfessionId === undefined) gs.studyingProfessionId = null;
+      if (gs.studyProgress === undefined) gs.studyProgress = 0;
+      if (gs.currentJobId === undefined) gs.currentJobId = null;
+      
+      applyOfflineTicks();
+      launchGame();
+    } catch (err) {
+      console.error("Save corrupted or migration failed, wiping save:", err);
+      clearSave();
+      initAdoptScreen();
+    }
   } else {
     initAdoptScreen();
   }
