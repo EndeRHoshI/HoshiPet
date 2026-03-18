@@ -39,7 +39,7 @@ const ITEMS = [
   { id:'water',    cat:'drink',   icon:'💧', name:'矿泉水',        desc:'水分 +40',                  price:5,   effect:{ thirst:40 } },
   { id:'milk',     cat:'drink',   icon:'🥛', name:'纯牛奶',        desc:'水分 +50 健康 +5',          price:12,  effect:{ thirst:50, health:5 } },
   { id:'juice',    cat:'drink',   icon:'🧃', name:'营养果汁',      desc:'水分 +70 心情 +10',         price:18,  effect:{ thirst:70, mood:10 } },
-  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫和草茶',      desc:'水分 +55 心情 +20',         price:25,  effect:{ thirst:55, mood:20 } },
+  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫薄荷草茶',    desc:'水分 +55 心情 +20',         price:25,  effect:{ thirst:55, mood:20 } },
   { id:'coffee',   cat:'drink',   icon:'☕', name:'猫薄荷咖啡',    desc:'水分 +40 心情 +30 健康 -5', price:22,  effect:{ thirst:40, mood:30, health:-5 } },
   // 洗澡清洁
   { id:'soap',     cat:'hygiene', icon:'🧴', name:'香皂',          desc:'清洁 +25',                  price:5,   effect:{ cleanliness:25 } },
@@ -48,12 +48,12 @@ const ITEMS = [
   { id:'spa',      cat:'hygiene', icon:'🛁', name:'豪华 SPA 套装', desc:'清洁 +100',                 price:35,  effect:{ cleanliness:100 } },
   // 健康医疗
   { id:'bandage',  cat:'health',  icon:'🩹', name:'创可贴',        desc:'健康 +15',                  price:8,   effect:{ health:15 } },
-  { id:'medicine', cat:'health',  icon:'💊', name:'猫和保健品',    desc:'健康 +30',                  price:20,  effect:{ health:30 } },
-  { id:'vaccine',  cat:'health',  icon:'💉', name:'猫和疫苗',      desc:'健康 +60 心情 -10',         price:45,  effect:{ health:60, mood:-10 } },
+  { id:'medicine', cat:'health',  icon:'💊', name:'猫咪保健品',    desc:'健康 +30',                  price:20,  effect:{ health:30 } },
+  { id:'vaccine',  cat:'health',  icon:'💉', name:'猫咪疫苗',      desc:'健康 +60 心情 -10',         price:45,  effect:{ health:60, mood:-10 } },
   // 娱乐玩具
   { id:'plush',    cat:'fun',     icon:'🧸', name:'毛绒玩具',      desc:'心情 +25',                  price:8,   effect:{ mood:25 } },
   { id:'toy',      cat:'fun',     icon:'🎀', name:'逗猫棒',        desc:'心情 +40',                  price:12,  effect:{ mood:40 } },
-  { id:'toyset',   cat:'fun',     icon:'🎈', name:'猫和玩具套装',  desc:'心情 +70',                  price:28,  effect:{ mood:70 } },
+  { id:'toyset',   cat:'fun',     icon:'🎈', name:'猫咪玩具套装',  desc:'心情 +70',                  price:28,  effect:{ mood:70 } },
   { id:'laser',    cat:'fun',     icon:'🔦', name:'激光笔',        desc:'心情 +100 饱食 -15 水分 -15',price:40, effect:{ mood:100, satiety:-15, thirst:-15 } },
   // 特殊道具
   { id:'rename',   cat:'special', icon:'📛', name:'改名卡',        desc:'可以重新命名猫咪',          price:30,  effect:{ rename:true } },
@@ -179,6 +179,7 @@ function applyDecay(withEvents = true) {
     if (prof && gs.studyProgress[pid] >= prof.learnTicks) {
       gs.learnedProfessions[prof.id] = true;
       gs.studyingProfessionId = null;
+      gs.state = 'idle'; // 学习完自动切换回空闲
       if (withEvents) addLog(`🎓 ${gs.name} 学成了「${prof.icon}${prof.name}」！现在可以去打工了！`);
     }
   }
@@ -379,7 +380,10 @@ function openBackpackModal() {
   });
   const inner = html || '<div class="inv-empty">背包空空如也，去商城买些东西吧~</div>';
   showModal('🎒','随身背包', `<div style="text-align:left;max-height:300px;overflow-y:auto;margin:-4px -2px">${inner}</div>`,
-    [{label:'关闭', fn:closeModalDirect}]);
+    [
+      {label:'前往商城 🛒', cls:'btn-primary', fn:() => { switchScene('shop'); closeModalDirect(); }},
+      {label:'关闭', fn:closeModalDirect}
+    ]);
 }
 
 function useItemFromModal(id) {
