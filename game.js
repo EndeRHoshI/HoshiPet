@@ -30,31 +30,34 @@ const ITEM_CATEGORIES = {
 
 const ITEMS = [
   // 食品类
-  { id:'snack',    cat:'food',    icon:'🫙', name:'小零食',        desc:'饱食 +20',          price:4,   effect:{ satiety:20 } },
-  { id:'fish',     cat:'food',    icon:'🐟', name:'鱼罐头',        desc:'饱食 +35',          price:10,  effect:{ satiety:35 } },
-  { id:'chicken',  cat:'food',    icon:'🍗', name:'烤鸡腿',        desc:'饱食 +60',          price:20,  effect:{ satiety:60 } },
-  { id:'steak',    cat:'food',    icon:'🥩', name:'生牛肉大餐',    desc:'饱食 +90 健康 +10', price:40,  effect:{ satiety:90, health:10 } },
+  { id:'snack',    cat:'food',    icon:'🫙', name:'小零食',        desc:'饱食 +20 清洁 -5',          price:4,   effect:{ satiety:20, cleanliness:-5 } },
+  { id:'fish',     cat:'food',    icon:'🐟', name:'鱼罐头',        desc:'饱食 +35',                  price:10,  effect:{ satiety:35 } },
+  { id:'chicken',  cat:'food',    icon:'🍗', name:'烤鸡腿',        desc:'饱食 +60 健康 -5',          price:20,  effect:{ satiety:60, health:-5 } },
+  { id:'steak',    cat:'food',    icon:'🥩', name:'生牛肉大餐',    desc:'饱食 +90 健康 +10 清洁 -10',price:40,  effect:{ satiety:90, health:10, cleanliness:-10 } },
+  { id:'catgrass', cat:'food',    icon:'🪴', name:'猫草',          desc:'饱食 +15 健康 +10',         price:8,   effect:{ satiety:15, health:10 } },
   // 饮料类
-  { id:'water',    cat:'drink',   icon:'💧', name:'矿泉水',        desc:'水分 +40',          price:5,   effect:{ thirst:40 } },
-  { id:'milk',     cat:'drink',   icon:'🥛', name:'纯牛奶',        desc:'水分 +50 健康 +5',  price:12,  effect:{ thirst:50, health:5 } },
-  { id:'juice',    cat:'drink',   icon:'🧃', name:'营养果汁',      desc:'水分 +70 心情 +10', price:18,  effect:{ thirst:70, mood:10 } },
-  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫和草茶',      desc:'水分 +55 心情 +20', price:25,  effect:{ thirst:55, mood:20 } },
+  { id:'water',    cat:'drink',   icon:'💧', name:'矿泉水',        desc:'水分 +40',                  price:5,   effect:{ thirst:40 } },
+  { id:'milk',     cat:'drink',   icon:'🥛', name:'纯牛奶',        desc:'水分 +50 健康 +5',          price:12,  effect:{ thirst:50, health:5 } },
+  { id:'juice',    cat:'drink',   icon:'🧃', name:'营养果汁',      desc:'水分 +70 心情 +10',         price:18,  effect:{ thirst:70, mood:10 } },
+  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫和草茶',      desc:'水分 +55 心情 +20',         price:25,  effect:{ thirst:55, mood:20 } },
+  { id:'coffee',   cat:'drink',   icon:'☕', name:'猫薄荷咖啡',    desc:'水分 +40 心情 +30 健康 -5', price:22,  effect:{ thirst:40, mood:30, health:-5 } },
   // 洗澡清洁
-  { id:'soap',     cat:'hygiene', icon:'🧴', name:'香皏',          desc:'清洁 +25',          price:5,   effect:{ cleanliness:25 } },
-  { id:'brush',    cat:'hygiene', icon:'🪷', name:'牙刷套装',      desc:'清洁 +35',          price:8,   effect:{ cleanliness:35 } },
-  { id:'shampoo',  cat:'hygiene', icon:'🧴', name:'香波沐浴露',    desc:'清洁 +55',          price:15,  effect:{ cleanliness:55 } },
-  { id:'spa',      cat:'hygiene', icon:'🛁', name:'豪华 SPA 套装', desc:'清洁 +100',         price:35,  effect:{ cleanliness:100 } },
+  { id:'soap',     cat:'hygiene', icon:'🧴', name:'香皂',          desc:'清洁 +25',                  price:5,   effect:{ cleanliness:25 } },
+  { id:'brush',    cat:'hygiene', icon:'🪷', name:'牙刷套装',      desc:'清洁 +35',                  price:8,   effect:{ cleanliness:35 } },
+  { id:'shampoo',  cat:'hygiene', icon:'🧴', name:'香波沐浴露',    desc:'清洁 +55',                  price:15,  effect:{ cleanliness:55 } },
+  { id:'spa',      cat:'hygiene', icon:'🛁', name:'豪华 SPA 套装', desc:'清洁 +100',                 price:35,  effect:{ cleanliness:100 } },
   // 健康医疗
-  { id:'bandage',  cat:'health',  icon:'🩹', name:'创可贴',        desc:'健康 +15',          price:8,   effect:{ health:15 } },
-  { id:'medicine', cat:'health',  icon:'💊', name:'猫和保健品',    desc:'健康 +30',          price:20,  effect:{ health:30 } },
-  { id:'vaccine',  cat:'health',  icon:'💉', name:'猫和疫苗',      desc:'健康 +60',          price:45,  effect:{ health:60 } },
+  { id:'bandage',  cat:'health',  icon:'🩹', name:'创可贴',        desc:'健康 +15',                  price:8,   effect:{ health:15 } },
+  { id:'medicine', cat:'health',  icon:'💊', name:'猫和保健品',    desc:'健康 +30',                  price:20,  effect:{ health:30 } },
+  { id:'vaccine',  cat:'health',  icon:'💉', name:'猫和疫苗',      desc:'健康 +60 心情 -10',         price:45,  effect:{ health:60, mood:-10 } },
   // 娱乐玩具
-  { id:'plush',    cat:'fun',     icon:'🧸', name:'毛绒玩具',      desc:'心情 +25',          price:8,   effect:{ mood:25 } },
-  { id:'toy',      cat:'fun',     icon:'🎀', name:'逗猫棒',        desc:'心情 +40',          price:12,  effect:{ mood:40 } },
-  { id:'toyset',   cat:'fun',     icon:'🎈', name:'猫和玩具套装',  desc:'心情 +70',          price:28,  effect:{ mood:70 } },
+  { id:'plush',    cat:'fun',     icon:'🧸', name:'毛绒玩具',      desc:'心情 +25',                  price:8,   effect:{ mood:25 } },
+  { id:'toy',      cat:'fun',     icon:'🎀', name:'逗猫棒',        desc:'心情 +40',                  price:12,  effect:{ mood:40 } },
+  { id:'toyset',   cat:'fun',     icon:'🎈', name:'猫和玩具套装',  desc:'心情 +70',                  price:28,  effect:{ mood:70 } },
+  { id:'laser',    cat:'fun',     icon:'🔦', name:'激光笔',        desc:'心情 +100 饱食 -15 水分 -15',price:40, effect:{ mood:100, satiety:-15, thirst:-15 } },
   // 特殊道具
-  { id:'rename',   cat:'special', icon:'📛', name:'改名卡',        desc:'可以重新命名猫和',  price:30,  effect:{ rename:true } },
-  { id:'revive',   cat:'special', icon:'💌', name:'复活卡',        desc:'复活失去的好朋友',  price:100, effect:{ revive:true } },
+  { id:'rename',   cat:'special', icon:'📛', name:'改名卡',        desc:'可以重新命名猫咪',          price:30,  effect:{ rename:true } },
+  { id:'revive',   cat:'special', icon:'💌', name:'复活卡',        desc:'复活失去的好朋友',          price:100, effect:{ revive:true } },
 ];
 
 const TRIP_EVENTS = [
@@ -169,13 +172,14 @@ function applyDecay(withEvents = true) {
   }
   // Study: increment study progress for chosen profession
   if (gs.state === 'study' && gs.studyingProfessionId) {
-    gs.studyProgress = (gs.studyProgress || 0) + 1;
-    const prof = PROFESSIONS.find(p => p.id === gs.studyingProfessionId);
-    if (prof && gs.studyProgress >= prof.learnTicks) {
+    if (typeof gs.studyProgress !== 'object') gs.studyProgress = {}; // Migration safety
+    const pid = gs.studyingProfessionId;
+    gs.studyProgress[pid] = (gs.studyProgress[pid] || 0) + 1;
+    const prof = PROFESSIONS.find(p => p.id === pid);
+    if (prof && gs.studyProgress[pid] >= prof.learnTicks) {
       gs.learnedProfessions[prof.id] = true;
       gs.studyingProfessionId = null;
-      gs.studyProgress = 0;
-      if (withEvents) addLog(`🎓 ${gs.name} 学成了「${prof.icon}${prof.name}」！现在可以去下广迎了！`);
+      if (withEvents) addLog(`🎓 ${gs.name} 学成了「${prof.icon}${prof.name}」！现在可以去打工了！`);
     }
   }
   // Trip events
@@ -278,7 +282,7 @@ function adoptCat() {
     ticks: 0, gold: 50, tripTicks: 0,
     satiety: 100, thirst: 100, cleanliness: 100, health: 100, mood: 100,
     state: 'idle', inventory: {}, isDead: false,
-    learnedProfessions: {}, studyingProfessionId: null, studyProgress: 0, currentJobId: null,
+    learnedProfessions: {}, studyingProfessionId: null, studyProgress: {}, currentJobId: null,
   };
   logs = [];
   addLog(`🎉 ${name} 来到了新家，它看起来很开心！`);
@@ -622,11 +626,14 @@ function updateProfessionUI() {
     const studying = gs.studyingProfessionId ? PROFESSIONS.find(p => p.id === gs.studyingProfessionId) : null;
     panel.innerHTML = `
       <div class="prof-panel-title">📚 选择要学习的职业</div>
-      ${studying ? `<div class="study-progress-bar-wrap">
-        <div class="study-prog-label">${studying.icon} 正在学习「${studying.name}」…&nbsp;
-          <span>${gs.studyProgress}/${studying.learnTicks} tick</span></div>
-        <div class="study-prog-bg"><div class="study-prog-fill" style="width:${Math.min(100,(gs.studyProgress/studying.learnTicks)*100).toFixed(1)}%"></div></div>
-      </div>` : ''}
+      ${studying ? (() => {
+        const prog = gs.studyProgress?.[studying.id] || 0;
+        return `<div class="study-progress-bar-wrap">
+          <div class="study-prog-label">${studying.icon} 正在学习「${studying.name}」…&nbsp;
+            <span>${prog}/${studying.learnTicks} tick</span></div>
+          <div class="study-prog-bg"><div class="study-prog-fill" style="width:${Math.min(100,(prog/studying.learnTicks)*100).toFixed(1)}%"></div></div>
+        </div>`;
+      })() : ''}
       <div class="prof-grid">${PROFESSIONS.map(p => {
         const learned  = gs.learnedProfessions[p.id];
         const isStudying = gs.studyingProfessionId === p.id;
@@ -668,8 +675,10 @@ function selectStudyProfession(id) {
   const reqMet = prof.req.every(r => gs.learnedProfessions[r]);
   if (!reqMet) { addLog(`🔒 需要先学会：${prof.req.map(r=>PROFESSIONS.find(p=>p.id===r)?.name).join('、')}`); return; }
   gs.studyingProfessionId = id;
-  gs.studyProgress = 0;
-  addLog(`📖 ${gs.name} 开始学习「${prof.icon}${prof.name}」，需要 ${prof.learnTicks} tick！`);
+  if (typeof gs.studyProgress !== 'object') gs.studyProgress = {};
+  if (!gs.studyProgress[id]) gs.studyProgress[id] = 0;
+  const remaining = prof.learnTicks - gs.studyProgress[id];
+  addLog(`📖 ${gs.name} 开始学习「${prof.icon}${prof.name}」，还需要 ${remaining} tick！`);
   updateProfessionUI();
   saveGame();
 }
@@ -690,7 +699,7 @@ window.addEventListener('DOMContentLoaded', () => {
       // Migrate old saves that don't have profession fields
       if (!gs.learnedProfessions) gs.learnedProfessions = {};
       if (gs.studyingProfessionId === undefined) gs.studyingProfessionId = null;
-      if (gs.studyProgress === undefined) gs.studyProgress = 0;
+      if (gs.studyProgress === undefined || typeof gs.studyProgress !== 'object') gs.studyProgress = {};
       if (gs.currentJobId === undefined) gs.currentJobId = null;
       
       applyOfflineTicks();

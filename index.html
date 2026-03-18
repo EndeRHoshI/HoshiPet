@@ -180,6 +180,14 @@ input[type="text"]:focus { border-color:var(--primary); }
 .mood-line      { font-size:15px; margin-top:4px; }
 
 /* Stat bars */
+/* Compact stats */
+.compact-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
+.compact-stats .c-stat:last-child { grid-column:span 2; }
+.c-label { display:flex; justify-content:space-between; font-size:11px; font-weight:700; margin-bottom:4px; }
+/* Collapsible list */
+.collapse-content { max-height:0; overflow:hidden; transition:max-height .3s ease, margin-top .3s ease; }
+.collapse-content.show { max-height:800px; margin-top:10px; }
+
 .offline-notice {
   background:linear-gradient(135deg,#a29bfe,#6c5ce7); border-radius:14px;
   padding:10px 14px; color:#fff; font-size:12px; margin-bottom:12px; display:none;
@@ -307,8 +315,7 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
 </head>
 <body>
 
-<!-- Gold display: hidden, moved to home scene -->
-<div class="gold-display" id="goldDisplay" style="display:none">🪙 <span id="goldVal">0</span></div>
+<!-- Gold display removed -->
 
 <!-- ═══════════ ADOPT SCREEN ═══════════ -->
 <div id="adoptScreen">
@@ -347,7 +354,7 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
                 <span class="tag" id="genderTag">性别</span>
                 <span class="tag tag-rare" id="rarityTag" style="display:none">✨ 稀有</span>
               </div>
-              <div class="home-gold">🪴 <span class="home-gold-val">0</span></div>
+              <div class="home-gold">🪙 <span class="home-gold-val">0</span></div>
               <div class="cat-age-text" id="ageDisplay">年龄：2个月</div>
               <div class="mood-line"    id="moodLine">😊 心情不错</div>
             </div>
@@ -361,28 +368,30 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
           <button class="btn btn-sm btn-ghost" style="margin-top:8px;color:#333" onclick="this.parentElement.style.display='none'">知道啦</button>
         </div>
 
-        <!-- 五维 -->
-        <div class="card">
-          <div class="card-title">📊 五维状态</div>
-          <div class="stat-row">
-            <div class="stat-label"><span>🍚 饱食</span><span class="val" id="satietyVal">100</span></div>
-            <div class="bar-bg"><div class="bar-fill bar-satiety" id="satietyBar" style="width:100%"></div></div>
-          </div>
-          <div class="stat-row">
-            <div class="stat-label"><span>💧 水分</span><span class="val" id="thirstVal">100</span></div>
-            <div class="bar-bg"><div class="bar-fill bar-thirst" id="thirstBar" style="width:100%"></div></div>
-          </div>
-          <div class="stat-row">
-            <div class="stat-label"><span>🛁 清洁</span><span class="val" id="cleanVal">100</span></div>
-            <div class="bar-bg"><div class="bar-fill bar-clean" id="cleanBar" style="width:100%"></div></div>
-          </div>
-          <div class="stat-row">
-            <div class="stat-label"><span>💊 健康</span><span class="val" id="healthVal">100</span></div>
-            <div class="bar-bg"><div class="bar-fill bar-health" id="healthBar" style="width:100%"></div></div>
-          </div>
-          <div class="stat-row">
-            <div class="stat-label"><span>😊 心情</span><span class="val" id="moodVal">100</span></div>
-            <div class="bar-bg"><div class="bar-fill bar-mood" id="moodBar" style="width:100%"></div></div>
+        <!-- 紧凑五维 -->
+        <div class="card" style="padding-bottom:14px">
+          <div class="card-title" style="margin-bottom:10px">📊 五维状态</div>
+          <div class="compact-stats">
+            <div class="c-stat">
+              <div class="c-label"><span>🍚 饱食</span><span class="val" id="satietyVal">100</span></div>
+              <div class="bar-bg"><div class="bar-fill bar-satiety" id="satietyBar" style="width:100%"></div></div>
+            </div>
+            <div class="c-stat">
+              <div class="c-label"><span>💧 水分</span><span class="val" id="thirstVal">100</span></div>
+              <div class="bar-bg"><div class="bar-fill bar-thirst" id="thirstBar" style="width:100%"></div></div>
+            </div>
+            <div class="c-stat">
+              <div class="c-label"><span>🛁 清洁</span><span class="val" id="cleanVal">100</span></div>
+              <div class="bar-bg"><div class="bar-fill bar-clean" id="cleanBar" style="width:100%"></div></div>
+            </div>
+            <div class="c-stat">
+              <div class="c-label"><span>💊 健康</span><span class="val" id="healthVal">100</span></div>
+              <div class="bar-bg"><div class="bar-fill bar-health" id="healthBar" style="width:100%"></div></div>
+            </div>
+            <div class="c-stat">
+              <div class="c-label"><span>😊 心情</span><span class="val" id="moodVal">100</span></div>
+              <div class="bar-bg"><div class="bar-fill bar-mood" id="moodBar" style="width:100%"></div></div>
+            </div>
           </div>
         </div>
 
@@ -412,9 +421,12 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
         </div>
 
         <!-- 背包 -->
-        <div class="card">
-          <div class="card-title">🎒 背包</div>
-          <div id="inventoryListHome"><div class="inv-empty">背包空空如也，去商城买些东西吧~</div></div>
+        <div class="card" style="padding:14px 18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="document.getElementById('inventoryListHome').classList.toggle('show'); this.querySelector('.arrow').textContent = document.getElementById('inventoryListHome').classList.contains('show') ? '🔼' : '🔽'">
+            <div class="card-title" style="margin-bottom:0;cursor:pointer">🎒 随身背包</div>
+            <div style="font-size:10px;color:var(--text-lt)">点击展开 <span class="arrow">🔽</span></div>
+          </div>
+          <div id="inventoryListHome" class="collapse-content"><div class="inv-empty">背包空空如也，去商城买些东西吧~</div></div>
         </div>
       </div><!-- /home-main -->
 
