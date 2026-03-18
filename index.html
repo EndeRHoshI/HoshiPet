@@ -200,7 +200,7 @@ input[type="text"]:focus { border-color:var(--primary); }
 /* mini stats inside cat card - right column */
 .cat-stats-mini { display:flex; flex-direction:column; gap:6px; justify-content:center; padding-left:10px; border-left:1px solid var(--border); }
 .stat-mini-row { display:flex; align-items:center; gap:5px; }
-.stat-mini-label { font-size:10px; width:34px; flex-shrink:0; white-space:nowrap; }
+.stat-mini-label { font-size:10px; width:48px; flex-shrink:0; white-space:nowrap; }
 .bar-bg-mini { flex:1; background:#f0e6e0; border-radius:20px; height:6px; overflow:hidden; }
 .bar-fill-mini { height:100%; border-radius:20px; transition:width .5s ease; }
 .stat-mini-val { font-size:10px; font-weight:700; width:22px; text-align:right; flex-shrink:0; color:var(--text-lt); }
@@ -383,27 +383,27 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
             <!-- 右：五维进度条 -->
             <div class="cat-stats-mini" style="flex:1; max-width:260px; min-width:180px; justify-content:center">
               <div class="stat-mini-row">
-                <span class="stat-mini-label">🍚饱</span>
+                <span class="stat-mini-label">🍚饱食</span>
                 <div class="bar-bg-mini"><div class="bar-fill-mini bar-satiety" id="satietyBar" style="width:100%"></div></div>
                 <span class="stat-mini-val" id="satietyVal">100</span>
               </div>
               <div class="stat-mini-row">
-                <span class="stat-mini-label">💧水</span>
+                <span class="stat-mini-label">💧水分</span>
                 <div class="bar-bg-mini"><div class="bar-fill-mini bar-thirst" id="thirstBar" style="width:100%"></div></div>
                 <span class="stat-mini-val" id="thirstVal">100</span>
               </div>
               <div class="stat-mini-row">
-                <span class="stat-mini-label">🛁洁</span>
+                <span class="stat-mini-label">🛁清洁</span>
                 <div class="bar-bg-mini"><div class="bar-fill-mini bar-clean" id="cleanBar" style="width:100%"></div></div>
                 <span class="stat-mini-val" id="cleanVal">100</span>
               </div>
               <div class="stat-mini-row">
-                <span class="stat-mini-label">💊康</span>
+                <span class="stat-mini-label">💊健康</span>
                 <div class="bar-bg-mini"><div class="bar-fill-mini bar-health" id="healthBar" style="width:100%"></div></div>
                 <span class="stat-mini-val" id="healthVal">100</span>
               </div>
               <div class="stat-mini-row">
-                <span class="stat-mini-label">😊情</span>
+                <span class="stat-mini-label">😊心情</span>
                 <div class="bar-bg-mini"><div class="bar-fill-mini bar-mood" id="moodBar" style="width:100%"></div></div>
                 <span class="stat-mini-val" id="moodVal">100</span>
               </div>
