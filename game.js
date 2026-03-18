@@ -295,7 +295,12 @@ function launchGame() {
   document.getElementById('adoptScreen').style.display = 'none';
   document.getElementById('appContainer').style.display = 'block';
   document.getElementById('navBar').style.display = 'flex';
-  document.getElementById('goldDisplay').style.display = 'block';
+  // goldDisplay no longer exists in template; skip
+  const gd = document.getElementById('goldDisplay');
+  if (gd) gd.style.display = 'block';
+  // Show floating backpack button
+  const fab = document.getElementById('fabBag');
+  if (fab) fab.style.display = 'flex';
 
   renderShopGrid();
   updateUI();
@@ -360,7 +365,35 @@ function updateUI() {
 
   updateStateButtons();
   renderInventory('inventoryList');
-  renderInventory('inventoryListHome');
+}
+
+function openBackpackModal() {
+  if (!gs) return;
+  const catOrder = ['food','drink','hygiene','health','fun','special'];
+  let html = '';
+  catOrder.forEach(catKey => {
+    const catItems = ITEMS.filter(i => i.cat === catKey);
+    const entries = catItems.map(item => {
+      const count = gs.inventory[item.id] || 0;
+      if (!count) return '';
+      return `<div class="inv-item" style="cursor:default">
+        <span class="inv-icon">${item.icon}</span>
+        <div class="inv-info"><div class="inv-name">${item.name}</div><div class="inv-count">×${count} · ${item.desc}</div></div>
+        <button class="btn btn-sm btn-primary" onclick="useItemFromModal('${item.id}')">使用</button>
+      </div>`;
+    }).filter(Boolean);
+    if (!entries.length) return;
+    html += `<div class="inv-category">${ITEM_CATEGORIES[catKey].label}</div>` + entries.join('');
+  });
+  const inner = html || '<div class="inv-empty">背包空空如也，去商城买些东西吧~</div>';
+  showModal('🎒','随身背包', `<div style="text-align:left;max-height:300px;overflow-y:auto;margin:-4px -2px">${inner}</div>`,
+    [{label:'关闭', fn:closeModalDirect}]);
+}
+
+function useItemFromModal(id) {
+  useItem(id);
+  closeModalDirect();
+  setTimeout(openBackpackModal, 80);
 }
 
 function setBar(id, val) {
