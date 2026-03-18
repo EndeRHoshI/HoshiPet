@@ -452,7 +452,7 @@ function renderShopGrid() {
         <span class="item-icon">${item.icon}</span>
         <div class="item-name">${item.name}</div>
         <div class="item-desc">${item.desc}</div>
-        <div class="item-price">🪴 ${item.price}</div>
+        <div class="item-price">🪙 ${item.price}</div>
       </div>`).join('');
     return `<div class="shop-cat-title">${label}</div>
             <div class="shop-grid">${grid}</div>`;
