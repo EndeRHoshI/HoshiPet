@@ -416,7 +416,7 @@ function updateStateButtons() {
 
 // ---------- 场景切换 ----------
 function switchScene(name) {
-  ['home','shop','system'].forEach(s => {
+  ['home','shop','system','trip'].forEach(s => {
     document.getElementById('scene' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
     document.getElementById('nav' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
   });
