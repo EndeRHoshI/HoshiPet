@@ -197,8 +197,8 @@ input[type="text"]:focus { border-color:var(--primary); }
 }
 .fab-bag:hover { transform:scale(1.1); }
 
-/* mini stats inside cat card */
-.cat-stats-mini { margin-top:8px; display:flex; flex-direction:column; gap:5px; flex:1; min-width:0; }
+/* mini stats inside cat card - right column */
+.cat-stats-mini { display:flex; flex-direction:column; gap:6px; justify-content:center; padding-left:10px; border-left:1px solid var(--border); }
 .stat-mini-row { display:flex; align-items:center; gap:5px; }
 .stat-mini-label { font-size:10px; width:34px; flex-shrink:0; white-space:nowrap; }
 .bar-bg-mini { flex:1; background:#f0e6e0; border-radius:20px; height:6px; overflow:hidden; }
@@ -358,13 +358,15 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
     <div class="home-layout">
       <!-- ── 左侧主内容 ── -->
       <div class="home-main">
-        <!-- 猫和信息卡（含内嵌五维） -->
+        <!-- 猫和信息卡（三列布局：图 | 信息 | 五维） -->
         <div class="card">
-          <div class="cat-header">
+          <div class="cat-header" style="align-items:stretch">
+            <!-- 左：猫图 -->
             <div class="cat-avatar-wrap">
               <img class="cat-img cat-anim-idle" id="catStateImg" src="assets/cat_idle.png" alt="cat">
               <span class="state-badge-float" id="stateBadge">😴</span>
             </div>
+            <!-- 中：名字/标签/金币/心情 -->
             <div class="cat-meta" style="flex:1;min-width:0">
               <h2 id="gameNameDisplay">猫猫</h2>
               <div class="tag-row">
@@ -377,33 +379,33 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
                 <div class="cat-age-text" id="ageDisplay">年龄：2个月</div>
               </div>
               <div class="mood-line" id="moodLine">😊 心情不错</div>
-              <!-- 内嵌五维进度条 -->
-              <div class="cat-stats-mini">
-                <div class="stat-mini-row">
-                  <span class="stat-mini-label">🍚饱</span>
-                  <div class="bar-bg-mini"><div class="bar-fill-mini bar-satiety" id="satietyBar" style="width:100%"></div></div>
-                  <span class="stat-mini-val" id="satietyVal">100</span>
-                </div>
-                <div class="stat-mini-row">
-                  <span class="stat-mini-label">💧水</span>
-                  <div class="bar-bg-mini"><div class="bar-fill-mini bar-thirst" id="thirstBar" style="width:100%"></div></div>
-                  <span class="stat-mini-val" id="thirstVal">100</span>
-                </div>
-                <div class="stat-mini-row">
-                  <span class="stat-mini-label">🛁洁</span>
-                  <div class="bar-bg-mini"><div class="bar-fill-mini bar-clean" id="cleanBar" style="width:100%"></div></div>
-                  <span class="stat-mini-val" id="cleanVal">100</span>
-                </div>
-                <div class="stat-mini-row">
-                  <span class="stat-mini-label">💊康</span>
-                  <div class="bar-bg-mini"><div class="bar-fill-mini bar-health" id="healthBar" style="width:100%"></div></div>
-                  <span class="stat-mini-val" id="healthVal">100</span>
-                </div>
-                <div class="stat-mini-row">
-                  <span class="stat-mini-label">😊情</span>
-                  <div class="bar-bg-mini"><div class="bar-fill-mini bar-mood" id="moodBar" style="width:100%"></div></div>
-                  <span class="stat-mini-val" id="moodVal">100</span>
-                </div>
+            </div>
+            <!-- 右：五维进度条 -->
+            <div class="cat-stats-mini" style="width:140px;flex-shrink:0;justify-content:center">
+              <div class="stat-mini-row">
+                <span class="stat-mini-label">🍚饱</span>
+                <div class="bar-bg-mini"><div class="bar-fill-mini bar-satiety" id="satietyBar" style="width:100%"></div></div>
+                <span class="stat-mini-val" id="satietyVal">100</span>
+              </div>
+              <div class="stat-mini-row">
+                <span class="stat-mini-label">💧水</span>
+                <div class="bar-bg-mini"><div class="bar-fill-mini bar-thirst" id="thirstBar" style="width:100%"></div></div>
+                <span class="stat-mini-val" id="thirstVal">100</span>
+              </div>
+              <div class="stat-mini-row">
+                <span class="stat-mini-label">🛁洁</span>
+                <div class="bar-bg-mini"><div class="bar-fill-mini bar-clean" id="cleanBar" style="width:100%"></div></div>
+                <span class="stat-mini-val" id="cleanVal">100</span>
+              </div>
+              <div class="stat-mini-row">
+                <span class="stat-mini-label">💊康</span>
+                <div class="bar-bg-mini"><div class="bar-fill-mini bar-health" id="healthBar" style="width:100%"></div></div>
+                <span class="stat-mini-val" id="healthVal">100</span>
+              </div>
+              <div class="stat-mini-row">
+                <span class="stat-mini-label">😊情</span>
+                <div class="bar-bg-mini"><div class="bar-fill-mini bar-mood" id="moodBar" style="width:100%"></div></div>
+                <span class="stat-mini-val" id="moodVal">100</span>
               </div>
             </div>
           </div>
