@@ -311,58 +311,50 @@ function launchGame() {
 // ---------- UI 更新 ----------
 function updateUI() {
   if (!gs) return;
-  // Gold
-  document.getElementById('goldVal').textContent = gs.gold;
-  document.getElementById('shopGoldVal').textContent = gs.gold;
+  const setEl = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
 
-  // Stat bars
-  setBar('satiety',    gs.satiety);
-  setBar('thirst',     gs.thirst);
-  setBar('clean',      gs.cleanliness);
-  setBar('health',     gs.health);
-  setBar('mood',       gs.mood);
+  // Gold (shopGoldVal in shop scene; goldVal may or may not exist)
+  setEl('goldVal', el => el.textContent = gs.gold);
+  setEl('shopGoldVal', el => el.textContent = gs.gold);
 
-  // Avatar
-  const av = document.getElementById('gameAvatar');
-  if (av) av.textContent = gs.cat.emoji;
-  
-  document.getElementById('gameNameDisplay').textContent = gs.name;
-  document.getElementById('breedTag').textContent = gs.cat.breed;
+  // Stat bars (safe via setBar which already guards)
+  setBar('satiety', gs.satiety);
+  setBar('thirst',  gs.thirst);
+  setBar('clean',   gs.cleanliness);
+  setBar('health',  gs.health);
+  setBar('mood',    gs.mood);
 
-  const genderEl = document.getElementById('genderTag');
-  genderEl.textContent = gs.cat.gender === '公' ? '♂ 公' : '♀ 母';
-  genderEl.className = 'tag ' + (gs.cat.gender === '公' ? 'tag-gender-m' : 'tag-gender-f');
+  // Avatar / name / breed / gender / rarity
+  setEl('gameAvatar', el => el.textContent = gs.cat.emoji);
+  setEl('gameNameDisplay', el => el.textContent = gs.name);
+  setEl('breedTag', el => el.textContent = gs.cat.breed);
+  setEl('genderTag', el => {
+    el.textContent = gs.cat.gender === '公' ? '♂ 公' : '♀ 母';
+    el.className = 'tag ' + (gs.cat.gender === '公' ? 'tag-gender-m' : 'tag-gender-f');
+  });
+  setEl('rarityTag', el => el.style.display = gs.cat.rarity === 'rare' ? '' : 'none');
 
-  document.getElementById('rarityTag').style.display = gs.cat.rarity === 'rare' ? '' : 'none';
-
-  // Age
+  // Age & mood text
   const months = 2 + Math.floor(gs.ticks / 200);
   const ageStr = months < 12 ? `${months} 个月` : `${(months/12).toFixed(1)} 岁`;
-  document.getElementById('ageDisplay').textContent = `年龄：${ageStr}`;
+  setEl('ageDisplay', el => el.textContent = `年龄：${ageStr}`);
+  setEl('moodLine', el => el.textContent = getMoodText());
 
-  // Mood text
-  document.getElementById('moodLine').textContent = getMoodText();
-
-  // Gold in home scene
-  const goldEls = document.querySelectorAll('.home-gold-val');
-  goldEls.forEach(el => el.textContent = gs.gold);
-  document.getElementById('shopGoldVal').textContent = gs.gold;
+  // Gold in home scene (multiple elements via class)
+  document.querySelectorAll('.home-gold-val').forEach(el => el.textContent = gs.gold);
 
   // Cat state image
   const catImgs = { idle:'assets/cat_idle.png', work:'assets/cat_work.png', study:'assets/cat_study.png', trip:'assets/cat_trip.png' };
-  const catImgEl = document.getElementById('catStateImg');
-  if (catImgEl) {
-    catImgEl.src = catImgs[gs.state] || catImgs.idle;
-    catImgEl.className = 'cat-img cat-anim-' + (gs.state || 'idle');
-  }
+  setEl('catStateImg', el => {
+    el.src = catImgs[gs.state] || catImgs.idle;
+    el.className = 'cat-img cat-anim-' + (gs.state || 'idle');
+  });
 
   // State badge
   const badges = { idle:'😴', work:'🛠️', study:'📚', trip:'🌳' };
-  document.getElementById('stateBadge').textContent = gs.isDead ? '💀' : (badges[gs.state] || '😴');
+  setEl('stateBadge', el => el.textContent = gs.isDead ? '💀' : (badges[gs.state] || '😴'));
 
-  // Profession info bar
   updateProfessionUI();
-
   updateStateButtons();
   renderInventory('inventoryList');
 }
