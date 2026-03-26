@@ -30,34 +30,34 @@ const ITEM_CATEGORIES = {
 
 const ITEMS = [
   // 食品类
-  { id:'snack',    cat:'food',    icon:'🫙', name:'小零食',        desc:'饱食 +20 清洁 -5',          price:4,   effect:{ satiety:20, cleanliness:-5 } },
-  { id:'fish',     cat:'food',    icon:'🐟', name:'鱼罐头',        desc:'饱食 +35',                  price:10,  effect:{ satiety:35 } },
-  { id:'chicken',  cat:'food',    icon:'🍗', name:'烤鸡腿',        desc:'饱食 +60 健康 -5',          price:20,  effect:{ satiety:60, health:-5 } },
-  { id:'steak',    cat:'food',    icon:'🥩', name:'生牛肉大餐',    desc:'饱食 +90 健康 +10 清洁 -10',price:40,  effect:{ satiety:90, health:10, cleanliness:-10 } },
-  { id:'catgrass', cat:'food',    icon:'🪴', name:'猫草',          desc:'饱食 +15 健康 +10',         price:8,   effect:{ satiety:15, health:10 } },
+  { id:'snack',    cat:'food',    icon:'🫙', name:'猫条零食',      desc:'饱食+20 心情+5 健康-2 清洁-5',       price:5,   effect:{ satiety:20, mood:5, health:-2, cleanliness:-5 } },
+  { id:'fish',     cat:'food',    icon:'🐟', name:'基础猫粮罐头',  desc:'饱食+40 水分+5',                     price:12,  effect:{ satiety:40, thirst:5 } },
+  { id:'chicken',  cat:'food',    icon:'🍗', name:'秘制烤鸡腿',    desc:'饱食+60 心情+25 健康-15 清洁-15',    price:22,  effect:{ satiety:60, mood:25, health:-15, cleanliness:-15 } },
+  { id:'steak',    cat:'food',    icon:'🥩', name:'顶配和牛大餐',  desc:'饱食+100 健康+15 心情+30 清洁-10',   price:45,  effect:{ satiety:100, health:15, mood:30, cleanliness:-10 } },
+  { id:'catgrass', cat:'food',    icon:'🪴', name:'新鲜猫草',      desc:'饱食+10 健康+20 心情+15',            price:18,  effect:{ satiety:10, health:20, mood:15 } },
   // 饮料类
-  { id:'water',    cat:'drink',   icon:'💧', name:'矿泉水',        desc:'水分 +40',                  price:5,   effect:{ thirst:40 } },
-  { id:'milk',     cat:'drink',   icon:'🥛', name:'纯牛奶',        desc:'水分 +50 健康 +5',          price:12,  effect:{ thirst:50, health:5 } },
-  { id:'juice',    cat:'drink',   icon:'🧃', name:'营养果汁',      desc:'水分 +70 心情 +10',         price:18,  effect:{ thirst:70, mood:10 } },
-  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫薄荷草茶',    desc:'水分 +55 心情 +20',         price:25,  effect:{ thirst:55, mood:20 } },
-  { id:'coffee',   cat:'drink',   icon:'☕', name:'猫薄荷咖啡',    desc:'水分 +40 心情 +30 健康 -5', price:22,  effect:{ thirst:40, mood:30, health:-5 } },
+  { id:'tapwater', cat:'drink',   icon:'🚰', name:'自来水',        desc:'水分+30 健康-5',                     price:3,   effect:{ thirst:30, health:-5 } },
+  { id:'water',    cat:'drink',   icon:'💧', name:'天然矿泉水',    desc:'水分+45',                            price:10,  effect:{ thirst:45 } },
+  { id:'milk',     cat:'drink',   icon:'🥛', name:'全脂牛奶',      desc:'水分+50 心情+15 健康-10',            price:18,  effect:{ thirst:50, mood:15, health:-10 } }, // 乳糖不耐受代价
+  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫薄荷冰茶',    desc:'水分+60 心情+40 饱食-5',             price:30,  effect:{ thirst:60, mood:40, satiety:-5 } },
+  { id:'juice',    cat:'drink',   icon:'🧪', name:'特制营养液',    desc:'水分+80 健康+25 心情+20',            price:48,  effect:{ thirst:80, health:25, mood:20 } },
   // 洗澡清洁
-  { id:'soap',     cat:'hygiene', icon:'🧴', name:'香皂',          desc:'清洁 +25',                  price:5,   effect:{ cleanliness:25 } },
-  { id:'brush',    cat:'hygiene', icon:'🪷', name:'牙刷套装',      desc:'清洁 +35',                  price:8,   effect:{ cleanliness:35 } },
-  { id:'shampoo',  cat:'hygiene', icon:'🧴', name:'香波沐浴露',    desc:'清洁 +55',                  price:15,  effect:{ cleanliness:55 } },
-  { id:'spa',      cat:'hygiene', icon:'🛁', name:'豪华 SPA 套装', desc:'清洁 +100',                 price:35,  effect:{ cleanliness:100 } },
+  { id:'spray',    cat:'hygiene', icon:'💦', name:'除臭喷雾',      desc:'清洁+30 心情-10',                    price:6,   effect:{ cleanliness:30, mood:-10 } }, // 猫咪一般很讨厌喷雾
+  { id:'dryshamp', cat:'hygiene', icon:'🧴', name:'免洗洗手液',    desc:'清洁+50 健康+5 心情-5',              price:15,  effect:{ cleanliness:50, health:5, mood:-5 } },
+  { id:'bath',     cat:'hygiene', icon:'🛁', name:'温水泡澡',      desc:'清洁+80 健康+15 心情-20',            price:28,  effect:{ cleanliness:80, health:15, mood:-20 } }, // 干净又卫生但恨水
+  { id:'spa',      cat:'hygiene', icon:'💆', name:'尊享猫咪SPA',   desc:'清洁+100 健康+30 心情+40',           price:65,  effect:{ cleanliness:100, health:30, mood:40 } },
   // 健康医疗
-  { id:'bandage',  cat:'health',  icon:'🩹', name:'创可贴',        desc:'健康 +15',                  price:8,   effect:{ health:15 } },
-  { id:'medicine', cat:'health',  icon:'💊', name:'猫咪保健品',    desc:'健康 +30',                  price:20,  effect:{ health:30 } },
-  { id:'vaccine',  cat:'health',  icon:'💉', name:'猫咪疫苗',      desc:'健康 +60 心情 -10',         price:45,  effect:{ health:60, mood:-10 } },
+  { id:'pill',     cat:'health',  icon:'💊', name:'苦味小药丸',    desc:'健康+25 心情-15',                    price:12,  effect:{ health:25, mood:-15 } },
+  { id:'probiotic',cat:'health',  icon:'🧫', name:'冻干益生菌',    desc:'健康+50 心情+5',                     price:35,  effect:{ health:50, mood:5 } },
+  { id:'vaccine',  cat:'health',  icon:'💉', name:'宠物医院体检',  desc:'健康+100 心情-30',                   price:70,  effect:{ health:100, mood:-30 } }, // 去医院会被吓到
   // 娱乐玩具
-  { id:'plush',    cat:'fun',     icon:'🧸', name:'毛绒玩具',      desc:'心情 +25',                  price:8,   effect:{ mood:25 } },
-  { id:'toy',      cat:'fun',     icon:'🎀', name:'逗猫棒',        desc:'心情 +40',                  price:12,  effect:{ mood:40 } },
-  { id:'toyset',   cat:'fun',     icon:'🎈', name:'猫咪玩具套装',  desc:'心情 +70',                  price:28,  effect:{ mood:70 } },
-  { id:'laser',    cat:'fun',     icon:'🔦', name:'激光笔',        desc:'心情 +100 饱食 -15 水分 -15',price:40, effect:{ mood:100, satiety:-15, thirst:-15 } },
+  { id:'yarn',     cat:'fun',     icon:'🧶', name:'毛线球',        desc:'心情+25 饱食-5 水分-5',              price:8,   effect:{ mood:25, satiety:-5, thirst:-5 } },
+  { id:'toy',      cat:'fun',     icon:'🎀', name:'逗猫棒',        desc:'心情+45 健康+5 饱食-10 水分-10',     price:18,  effect:{ mood:45, health:5, satiety:-10, thirst:-10 } }, // 运动加健康
+  { id:'mouse',    cat:'fun',     icon:'🐭', name:'电动老鼠',      desc:'心情+80 饱食-15 水分-15',            price:35,  effect:{ mood:80, satiety:-15, thirst:-15 } },
+  { id:'laser',    cat:'fun',     icon:'🛸', name:'全息猫爬架',    desc:'心情+100 健康+20 饱食-20 水分-20',   price:75,  effect:{ mood:100, health:20, satiety:-20, thirst:-20 } },
   // 特殊道具
-  { id:'rename',   cat:'special', icon:'📛', name:'改名卡',        desc:'可以重新命名猫咪',          price:30,  effect:{ rename:true } },
-  { id:'revive',   cat:'special', icon:'💌', name:'复活卡',        desc:'复活失去的好朋友',          price:100, effect:{ revive:true } },
+  { id:'rename',   cat:'special', icon:'📛', name:'改名卡',        desc:'可以重新命名猫咪',                   price:30,  effect:{ rename:true } },
+  { id:'revive',   cat:'special', icon:'💌', name:'复活卡',        desc:'复活失去的好朋友',                   price:100, effect:{ revive:true } },
 ];
 
 const TRIP_EVENTS = [
