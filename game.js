@@ -334,7 +334,7 @@ function adoptCat() {
   gs = {
     cat: selectedCatData, name,
     adoptTime: Date.now(), lastSaveTime: Date.now(),
-    ticks: 0, gold: 50, tripTicks: 0,
+    ticks: 0, gold: 100, tripTicks: 0,
     satiety: 100, thirst: 100, cleanliness: 100, health: 100, mood: 100,
     state: 'idle', inventory: {}, isDead: false,
     learnedProfessions: {}, studyingProfessionId: null, studyProgress: {}, currentJobId: null,
