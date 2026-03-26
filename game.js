@@ -73,15 +73,15 @@ const TRIP_EVENTS = [
 
 const PROFESSIONS = [
   // Tier 1 — 无前置要求
-  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'守卫家园，防止小偷入侵',       learnTicks:8,  wage:4,  req:[], tier:1 },
-  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'猫咪咖啡店，为客人端茶送水',   learnTicks:12, wage:7,  req:[], tier:1 },
-  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'专业捕猎,守护粮仓不让鼠辈猖狂', learnTicks:18, wage:11, req:[], tier:1 },
+  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'守卫家园，防止小偷入侵',       learnTicks:240,  wage:4,  req:[], tier:1 },
+  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'猫咪咖啡店，为客人端茶送水',   learnTicks:360,  wage:7,  req:[], tier:1 },
+  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'专业捕猎,守护粮仓不让鼠辈猖狂', learnTicks:540,  wage:11, req:[], tier:1 },
   // Tier 2 — 需前置
-  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'湖边垂钓，以渔为生',           learnTicks:28, wage:16, req:['hunter'],           tier:2 },
-  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'调查神秘案件，追踪可疑线索',   learnTicks:45, wage:24, req:['barista'],           tier:2 },
-  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'猫咪星级餐厅掌厨料理大师',     learnTicks:38, wage:20, req:['barista','hunter'], tier:2 },
+  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'湖边垂钓，以渔为生',           learnTicks:840,  wage:16, req:['hunter'],           tier:2 },
+  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'调查神秘案件，追踪可疑线索',   learnTicks:1350, wage:24, req:['barista'],          tier:2 },
+  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'猫咪星级餐厅掌厨料理大师',     learnTicks:1140, wage:20, req:['barista','hunter'], tier:2 },
   // Tier 3 — 高级
-  { id:'accountant', icon:'📊', name:'理财顾问', desc:'帮猫咪们规划财富，稳健投资',   learnTicks:75, wage:38, req:['detective','fisher'], tier:3 },
+  { id:'accountant', icon:'📊', name:'理财顾问', desc:'帮猫咪们规划财富，稳健投资',   learnTicks:2250, wage:38, req:['detective','fisher'], tier:3 },
 ];
 
 // ---------- 全局状态 ----------
@@ -120,14 +120,22 @@ function clearSave() {
 function applyOfflineTicks() {
   const elapsed = Date.now() - gs.lastSaveTime;
   const total = Math.min(Math.floor(elapsed / tickMs), Math.floor(8*3600000 / tickMs));
-  if (total <= 0) return;
+  if (total <= 0) {
+    saveGame();
+    return;
+  }
   for (let i = 0; i < total; i++) { applyDecay(false); gs.ticks++; }
   const mins = Math.round(total * tickMs / 60000);
-  const el = document.getElementById('offlineNotice');
-  el.style.display = 'block';
-  el.innerHTML = `⏰ <strong>${gs.name}</strong> 离线了约 ${mins} 分钟，状态发生了变化~`;
-  addLog(`⏰ 离线了 ${mins} 分钟，${gs.name} 在家等你回来~`);
-  setTimeout(() => el.style.display = 'none', 5000);
+  if (mins >= 1) {
+    const el = document.getElementById('offlineNotice');
+    if (el) {
+      el.style.display = 'block';
+      el.innerHTML = `⏰ <strong>${gs.name}</strong> 离线了约 ${mins} 分钟，状态发生了变化~`;
+      setTimeout(() => el.style.display = 'none', 5000);
+    }
+    addLog(`⏰ 离线了 ${mins} 分钟，${gs.name} 在家等你回来~`);
+  }
+  saveGame();
 }
 
 // ---------- 衰减 ----------
@@ -140,31 +148,37 @@ function applyDecay(withEvents = true) {
   const v = gs.cat.vitality, r = gs.cat.resistance, iq = gs.cat.intelligence;
   const [ms, mt, mc] = getMultiplier();
 
-  gs.satiety     = clamp(gs.satiety     - (0.5 + (v-1)*0.1) * ms);
-  gs.thirst      = clamp(gs.thirst      - (0.6 + (v-1)*0.1) * mt);
-  gs.cleanliness = clamp(gs.cleanliness - 0.2 * mc);
+  // 新版现有时统：1 tick 默认为 30 秒。现实一天 = 2880 ticks
+  // 目标需求：3天（约 8640 ticks）消耗约 90 点。因此基础消耗系数控制在 0.01 上下。
+  const baseSatiety = 0.010 + (v-1)*0.001; 
+  const baseThirst  = 0.012 + (v-1)*0.001;
+  const baseClean   = 0.008 + (v-1)*0.001;
 
-  const rf = 1 - (r-1) * 0.08;
+  gs.satiety     = clamp(gs.satiety     - baseSatiety * ms);
+  gs.thirst      = clamp(gs.thirst      - baseThirst * mt);
+  gs.cleanliness = clamp(gs.cleanliness - baseClean * mc);
+
+  const rf = 1 - (r-1) * 0.05; // 抵抗力减免每级 5%
   let hd = 0;
-  if (gs.satiety < 30)     hd -= 0.3 * rf;
-  if (gs.thirst  < 20)     hd -= 0.4 * rf;
-  if (gs.cleanliness < 20) hd -= 0.15 * rf;
-  if (gs.satiety > 70 && gs.thirst > 70 && gs.cleanliness > 70) hd += 0.05;
-  if (gs.state === 'trip') hd += 0.2;
+  if (gs.satiety < 30)     hd -= 0.015 * rf;
+  if (gs.thirst  < 20)     hd -= 0.020 * rf;
+  if (gs.cleanliness < 20) hd -= 0.005 * rf;
+  if (gs.satiety > 70 && gs.thirst > 70 && gs.cleanliness > 70) hd += 0.005;
+  if (gs.state === 'trip') hd += 0.010;
   gs.health = clamp(gs.health + hd, 100);
 
-  const moodDecay = Math.max(0.05, 0.15 - (iq-1)*0.02);
+  const moodDecay = Math.max(0.001, 0.003 - (iq-1)*0.0005);
   let md = -moodDecay;
-  if (gs.health > 70)  md += 0.1;
-  if (gs.satiety > 60) md += 0.05;
-  if (gs.thirst  > 60) md += 0.05;
-  if (gs.health < 30)  md -= 0.2;
-  if (gs.satiety < 20) md -= 0.15;
-  if (gs.state === 'trip') md += 0.3;
+  if (gs.health > 70)  md += 0.005;
+  if (gs.satiety > 60) md += 0.002;
+  if (gs.thirst  > 60) md += 0.002;
+  if (gs.health < 30)  md -= 0.010;
+  if (gs.satiety < 20) md -= 0.015;
+  if (gs.state === 'trip') md += 0.020;
   gs.mood = clamp(gs.mood + md, 100);
 
-  // Work earnings — every 8 ticks, based on current job
-  if (gs.state === 'work' && gs.ticks > 0 && gs.ticks % 8 === 0) {
+  // Work earnings — every 240 ticks, based on current job
+  if (gs.state === 'work' && gs.ticks > 0 && gs.ticks % 240 === 0) {
     const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
     const earned = job ? job.wage : 3;
     gs.gold += earned;
@@ -211,6 +225,20 @@ function applyEvent(ev, log = true) {
 }
 
 function clamp(v, max = 100) { return Math.max(0, Math.min(max, v)); }
+
+// ---------- 时间换算 ----------
+function formatTime(ticks) {
+  const secs = Math.round(ticks * tickMs / 1000);
+  if (secs < 60) return `${secs} 秒`;
+  const mins = Math.floor(secs / 60);
+  const remSecs = secs % 60;
+  if (mins < 60) {
+    return remSecs > 0 ? `${mins}分${remSecs}秒` : `${mins}分钟`;
+  }
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return remMins > 0 ? `${hours}小时${remMins}分钟` : `${hours}小时`;
+}
 
 // ---------- Tick ----------
 function tick() {
@@ -537,9 +565,19 @@ function addGold(n) { gs.gold += n; }
 // ---------- 设置 ----------
 function updateTickRate(v) {
   tickMs = v * 1000;
-  document.getElementById('tickRateLabel').textContent = `当前：${v}秒/tick`;
+  const decayPerDay = Math.round((86400 / v) * 0.010);
+  const daysToStarve = (100 / Math.max(1, decayPerDay)).toFixed(1);
+  
+  document.getElementById('tickRateLabel').innerHTML = `
+    当前刷新频率：每 <b>${v}</b> 秒<br>
+    <span style="font-size:11px; color:#e17055; display:inline-block; margin-top:3px;">
+      【测算】现实中约 ${daysToStarve} 天会达到极限饥饿
+    </span>
+  `;
   startTicker();
   saveGame();
+  if (gs && gs.state === 'study') updateProfessionUI(); 
+  if (gs && gs.state === 'work') updateProfessionUI();
 }
 
 // ---------- 改名 ----------
@@ -595,11 +633,11 @@ function showSkillInfo() {
   showModal('📚','职业系统说明',
     `<div style="text-align:left;line-height:1.9;font-size:13px">
       🎓 <b>学习阶段</b><br>
-      选择一门职业开始学习。挂机满对应 Tick 数即可出师。<br>
+      选择一门职业开始学习。挂机满对应的时间即可出师。<br>
       <br>
       💼 <b>打工阶段</b><br>
       出师后，可以在打工时选择该职业上岗。<br>
-      每 <b>8个 Tick</b> 结算一次工资，高阶职业赚得更多！<br>
+      保持打工状态，每隔一段时间就会自动结算一次工资，高阶职业赚得更多！<br>
       <br>
       📈 <b>晋级之路</b><br>
       某些高级职业（如星级厨师、理财顾问）需要先学会基础职业才能解锁。
@@ -659,7 +697,7 @@ function updateProfessionUI() {
         const prog = gs.studyProgress?.[studying.id] || 0;
         return `<div class="study-progress-bar-wrap">
           <div class="study-prog-label">${studying.icon} 正在学习「${studying.name}」…&nbsp;
-            <span>${prog}/${studying.learnTicks} tick</span></div>
+            <span>已学 ${formatTime(prog)} / 共需 ${formatTime(studying.learnTicks)}</span></div>
           <div class="study-prog-bg"><div class="study-prog-fill" style="width:${Math.min(100,(prog/studying.learnTicks)*100).toFixed(1)}%"></div></div>
         </div>`;
       })() : ''}
@@ -673,8 +711,8 @@ function updateProfessionUI() {
           onclick="${canStudy ? `selectStudyProfession('${p.id}')` : ''}">
           <div class="prof-icon">${p.icon}</div>
           <div class="prof-name">${p.name}</div>
-          <div class="prof-desc">${learned?'✅ 已掌握': isStudying?'📖 学习中': !reqMet?`🔒 需先学：${reqNames}`: `⏱ ${p.learnTicks} tick`}</div>
-          <div class="prof-wage">打工赏金 ${p.wage}金/轮</div>
+          <div class="prof-desc">${learned?'✅ 已掌握': isStudying?'📖 学习中': !reqMet?`🔒 需先学：${reqNames}`: `⏱ 需 ${formatTime(p.learnTicks)}`}</div>
+          <div class="prof-wage">打工收益：${p.wage}金 / ${formatTime(240)}</div>
         </div>`;
       }).join('')}</div>`;
   } else if (gs.state === 'work') {
@@ -682,7 +720,7 @@ function updateProfessionUI() {
     panel.innerHTML = `
       <div class="prof-panel-title">🛠️ 选择打工职业</div>
       ${learnedCount === 0
-        ? `<div class="prof-empty">还没有掌握任何职业，先去「学习」状态学习吧！目前只能做<b>零工（3金/轮）</b>。</div>`
+        ? `<div class="prof-empty">还没有掌握任何职业，先去「学习」状态学习吧！目前只能做<b>零工（3金 / ${formatTime(240)}）</b>。</div>`
         : `<div class="prof-grid">${PROFESSIONS.map(p => {
             if (!gs.learnedProfessions[p.id]) return '';
             const active = gs.currentJobId === p.id;
@@ -690,7 +728,7 @@ function updateProfessionUI() {
               <div class="prof-icon">${p.icon}</div>
               <div class="prof-name">${p.name}</div>
               <div class="prof-desc">${p.desc}</div>
-              <div class="prof-wage">${active?'✅ 当前职业':''} ${p.wage}金/轮</div>
+              <div class="prof-wage">${active?'✅ 当前职业<br>':''}收益：${p.wage}金 / ${formatTime(240)}</div>
             </div>`;
           }).join('')}</div>`}`;
   } else {
@@ -707,7 +745,7 @@ function selectStudyProfession(id) {
   if (typeof gs.studyProgress !== 'object') gs.studyProgress = {};
   if (!gs.studyProgress[id]) gs.studyProgress[id] = 0;
   const remaining = prof.learnTicks - gs.studyProgress[id];
-  addLog(`📖 ${gs.name} 开始学习「${prof.icon}${prof.name}」，还需要 ${remaining} tick！`);
+  addLog(`📖 ${gs.name} 开始学习「${prof.icon}${prof.name}」，还需要 ${formatTime(remaining)}！`);
   updateProfessionUI();
   saveGame();
 }
@@ -716,7 +754,7 @@ function selectJob(id) {
   if (!gs.learnedProfessions[id]) return;
   const prof = PROFESSIONS.find(p => p.id === id);
   gs.currentJobId = id;
-  addLog(`💼 ${gs.name} 上岗了「${prof.icon}${prof.name}」，赏金 ${prof.wage}金/轮！`);
+  addLog(`💼 ${gs.name} 上岗了「${prof.icon}${prof.name}」，工资 ${prof.wage}金 / ${formatTime(240)}！`);
   updateProfessionUI();
   saveGame();
 }
@@ -739,6 +777,7 @@ window.addEventListener('DOMContentLoaded', () => {
       initAdoptScreen();
     }
   } else {
+    document.getElementById('adoptScreen').style.display = 'block';
     initAdoptScreen();
   }
   // Close modal on overlay click
@@ -748,5 +787,16 @@ window.addEventListener('DOMContentLoaded', () => {
   // Tick slider init
   document.getElementById('tickSlider').value = tickMs / 1000;
   document.getElementById('tickRateLabel').textContent = `当前：${tickMs/1000}秒/tick`;
+
+  // Visibility change listener for background/foreground syncing
+  document.addEventListener('visibilitychange', () => {
+    if (!gs) return;
+    if (document.visibilityState === 'hidden') {
+      saveGame();
+    } else if (document.visibilityState === 'visible') {
+      applyOfflineTicks();
+      updateUI();
+    }
+  });
 });
 
