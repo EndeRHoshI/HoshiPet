@@ -572,18 +572,51 @@ function useItem(id) {
     updateUI(); saveGame(); return;
   }
   // Stat items
-  const eff = item.effect;
-  if(!gs.isDead) {
-    if (eff.satiety)    gs.satiety    = clamp(gs.satiety    + eff.satiety, 100);
-    if (eff.thirst)     gs.thirst     = clamp(gs.thirst     + eff.thirst, 100);
-    if (eff.cleanliness)gs.cleanliness= clamp(gs.cleanliness+ eff.cleanliness, 100);
-    if (eff.health)     gs.health     = clamp(gs.health     + eff.health, 100);
-    if (eff.mood)       gs.mood       = clamp(gs.mood       + eff.mood, 100);
-    addLog(`${item.icon} 使用了${item.name}，${gs.name}变舒服了~`);
-  } else {
+  if (gs.isDead) {
     addLog(`😿 宠物已去世，先用复活卡吧~`);
     return;
   }
+
+  const eff = item.effect;
+  const oldSatiety = gs.satiety;
+  const oldThirst = gs.thirst;
+  
+  let changed = [];
+  if (eff.satiety)    { gs.satiety    = clamp(gs.satiety    + eff.satiety, 100); changed.push(`饱食${eff.satiety>0?'+':''}${eff.satiety}`); }
+  if (eff.thirst)     { gs.thirst     = clamp(gs.thirst     + eff.thirst, 100); changed.push(`水分${eff.thirst>0?'+':''}${eff.thirst}`); }
+  if (eff.cleanliness){ gs.cleanliness= clamp(gs.cleanliness+ eff.cleanliness, 100); changed.push(`清洁${eff.cleanliness>0?'+':''}${eff.cleanliness}`); }
+  if (eff.health)     { gs.health     = clamp(gs.health     + eff.health, 100); changed.push(`健康${eff.health>0?'+':''}${eff.health}`); }
+  if (eff.mood)       { gs.mood       = clamp(gs.mood       + eff.mood, 100); changed.push(`心情${eff.mood>0?'+':''}${eff.mood}`); }
+
+  let flavor = '';
+  if (item.cat === 'food') {
+    flavor = oldSatiety < 40 ? '狼吞虎咽地吃光了粮食' : '吧唧吧唧吃得肚子圆滚滚';
+  } else if (item.cat === 'drink') {
+    flavor = oldThirst < 40 ? '咕噜咕噜一口气狂饮' : '喝完以后解渴又舒爽';
+  } else if (item.cat === 'hygiene') {
+    flavor = (eff.mood && eff.mood < 0) ? '为了变干净委屈巴巴地忍耐着' : '打理完香喷喷的像个高贵的毛球';
+  } else if (item.cat === 'health') {
+    flavor = (eff.mood && eff.mood < 0) ? '拼命挣扎，但身体确实变好了' : '接受治疗后感觉精神焕发';
+  } else if (item.cat === 'fun') {
+    flavor = '玩得不亦乐乎，彻底释放了压力';
+  } else {
+    flavor = '开心地蹭了蹭你的手';
+  }
+
+  // 动作气泡浮现
+  const el = document.getElementById('petActionText');
+  if (el) {
+    el.textContent = `${gs.name} ${flavor}！`;
+    el.style.opacity = 1;
+    el.style.transform = 'translateY(0)';
+    setTimeout(() => {
+      el.style.opacity = 0;
+      el.style.transform = 'translateY(10px)';
+    }, 2000);
+  }
+
+  addLog(`🎁 给 ${gs.name} 使用「${item.icon}${item.name}」，${flavor}。(${changed.join(' ')})`);
+
   gs.inventory[id]--;
   if (!gs.inventory[id]) delete gs.inventory[id];
   updateUI(); saveGame();
