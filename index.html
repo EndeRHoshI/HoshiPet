@@ -54,6 +54,23 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 #sceneSystem.active .sys-row        { border-color:rgba(255,255,255,.1); }
 #sceneSystem.active .app-desc       { color:#9975cc; }
 
+/* Shop High Contrast */
+#sceneShop.active .card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 107, 107, 0.15);
+  box-shadow: 0 10px 30px rgba(107, 58, 42, 0.15);
+}
+#sceneShop .page-title {
+  color: #5c3a21;
+  text-shadow: 0 2px 8px rgba(255,255,255,0.9), 0 0 12px #fff;
+}
+#sceneShop .page-sub {
+  color: #7d5a44;
+  text-shadow: 0 1px 4px rgba(255,255,255,0.9);
+  font-weight: bold;
+}
+
 /* ── Cat state image ── */
 .cat-img { width:78px; height:78px; object-fit:contain; }
 .cat-anim-idle  { animation:bobble 3s ease-in-out infinite; }
@@ -66,13 +83,13 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 
 /* ── Profession panel ── */
 .prof-panel-title { font-size:11px; font-weight:700; color:var(--text-lt); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
-.prof-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.prof-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:10px; margin-top:10px; }
 .prof-card {
-  background:#fff8f4; border:2px solid var(--border); border-radius:14px;
-  padding:10px 9px; text-align:center; cursor:pointer;
-  transition:border-color .2s,background .2s;
+  margin-top:10px; background:rgba(255,255,255,0.7); border:2px solid var(--border);
+  border-radius:16px; padding:12px;
+  cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
 }
-.prof-card:hover:not(.prof-locked) { border-color:#fcb69f; }
+.prof-card:hover:not(.prof-locked) { border-color:var(--primary); transform:translateY(-2px); background:rgba(255,255,255,0.9); }
 .prof-icon   { font-size:26px; margin-bottom:4px; }
 .prof-name   { font-size:12px; font-weight:700; }
 .prof-desc   { font-size:10px; color:var(--text-lt); margin:2px 0; line-height:1.4; }
@@ -81,7 +98,7 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 .prof-studying { background:#fff8e1; border-color:#fdcb6e; }
 .prof-locked   { opacity:.45; cursor:default; }
 .prof-active   { background:#fff0e6; border-color:var(--primary); }
-.prof-empty    { font-size:12px; color:var(--text-lt); text-align:center; padding:14px; }
+.prof-empty { text-align:center; padding:20px; color:var(--text-lt); font-size:13px; font-style:italic;}
 .study-progress-bar-wrap { background:#fffbea; border-radius:12px; padding:10px 12px; margin-bottom:10px; }
 .study-prog-label { font-size:11px; font-weight:600; color:#a0522d; margin-bottom:5px; display:flex; justify-content:space-between; }
 .study-prog-bg   { background:#f0e6e0; border-radius:20px; height:8px; overflow:hidden; }
@@ -95,7 +112,7 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 .page-title { font-size:26px; font-weight:900; margin-bottom:3px; }
 .page-sub   { font-size:13px; color:var(--text-lt); margin-bottom:16px; }
 
-/* ── Cards ── */
+/* ── Cards / Layout ── */
 .card {
   background:#fff; border-radius:22px; padding:18px;
   box-shadow:0 4px 18px rgba(0,0,0,.07); margin-bottom:12px;
@@ -270,7 +287,7 @@ input[type="text"]:focus { border-color:var(--primary); }
 .gold-banner .g-label  { font-size:11px; opacity:.85; }
 .gold-banner .g-amount { font-size:26px; font-weight:900; }
 
-.shop-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:4px; }
+.shop-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr)); gap:10px; }
 .shop-cat-title {
   font-size:11px; font-weight:700; color:var(--text-lt);
   text-transform:uppercase; letter-spacing:1px;
@@ -278,11 +295,11 @@ input[type="text"]:focus { border-color:var(--primary); }
 }
 .shop-cat-title:first-child { margin-top:0; }
 .shop-item {
-  background:#fff; border:2px solid var(--border); border-radius:16px;
+  background:rgba(255,255,255,0.7); border:2px solid var(--border); border-radius:16px;
   padding:14px 10px; text-align:center; cursor:pointer;
-  transition:transform .15s,border-color .15s;
+  transition:transform .15s,border-color .15s,background .15s;
 }
-.shop-item:hover { transform:translateY(-2px); border-color:#fcb69f; }
+.shop-item:hover { transform:translateY(-3px); border-color:var(--primary); background:rgba(255,255,255,0.9); }
 .item-icon  { font-size:30px; display:block; margin-bottom:5px; }
 .item-name  { font-size:12px; font-weight:700; }
 .item-desc  { font-size:10px; color:var(--text-lt); margin:2px 0 7px; }
@@ -472,8 +489,7 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
       <span class="g-icon">🪙</span>
       <div><div class="g-label">我的金币</div><div class="g-amount" id="shopGoldVal">0</div></div>
     </div>
-    <div class="card">
-      <div class="card-title">🏪 物品商店</div>
+    <div class="card" style="padding-top:22px;">
       <div id="shopGrid"></div>
     </div>
     <div class="card">
