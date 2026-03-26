@@ -30,29 +30,38 @@ const ITEM_CATEGORIES = {
 
 const ITEMS = [
   // 食品类
-  { id:'snack',    cat:'food',    icon:'🫙', name:'猫条零食',      desc:'饱食+20 心情+5 健康-2 清洁-5',       price:5,   effect:{ satiety:20, mood:5, health:-2, cleanliness:-5 } },
-  { id:'fish',     cat:'food',    icon:'🐟', name:'基础猫粮罐头',  desc:'饱食+40 水分+5',                     price:12,  effect:{ satiety:40, thirst:5 } },
-  { id:'chicken',  cat:'food',    icon:'🍗', name:'秘制烤鸡腿',    desc:'饱食+60 心情+25 健康-15 清洁-15',    price:22,  effect:{ satiety:60, mood:25, health:-15, cleanliness:-15 } },
-  { id:'steak',    cat:'food',    icon:'🥩', name:'顶配和牛大餐',  desc:'饱食+100 健康+15 心情+30 清洁-10',   price:45,  effect:{ satiety:100, health:15, mood:30, cleanliness:-10 } },
-  { id:'catgrass', cat:'food',    icon:'🪴', name:'新鲜猫草',      desc:'饱食+10 健康+20 心情+15',            price:18,  effect:{ satiety:10, health:20, mood:15 } },
+  { id:'snack',    cat:'food',    icon:'🫙', name:'小零食',        desc:'饱食+20 心情+5 健康-2 清洁-5',       price:5,   effect:{ satiety:20, mood:5, health:-2, cleanliness:-5 } },
+  { id:'fish',     cat:'food',    icon:'🐟', name:'鱼罐头',        desc:'饱食+40 水分+5',                     price:12,  effect:{ satiety:40, thirst:5 } },
+  { id:'chicken',  cat:'food',    icon:'🍗', name:'烤鸡腿',        desc:'饱食+60 心情+25 健康-15 清洁-15',    price:22,  effect:{ satiety:60, mood:25, health:-15, cleanliness:-15 } },
+  { id:'steak',    cat:'food',    icon:'🥩', name:'生牛肉大餐',    desc:'饱食+100 健康+15 心情+30 清洁-10',   price:45,  effect:{ satiety:100, health:15, mood:30, cleanliness:-10 } },
+  { id:'catgrass', cat:'food',    icon:'🪴', name:'猫草',          desc:'饱食+10 健康+20 心情+15',            price:18,  effect:{ satiety:10, health:20, mood:15 } },
   // 饮料类
   { id:'tapwater', cat:'drink',   icon:'🚰', name:'自来水',        desc:'水分+30 健康-5',                     price:3,   effect:{ thirst:30, health:-5 } },
-  { id:'water',    cat:'drink',   icon:'💧', name:'天然矿泉水',    desc:'水分+45',                            price:10,  effect:{ thirst:45 } },
-  { id:'milk',     cat:'drink',   icon:'🥛', name:'全脂牛奶',      desc:'水分+50 心情+15 健康-10',            price:18,  effect:{ thirst:50, mood:15, health:-10 } }, // 乳糖不耐受代价
-  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫薄荷冰茶',    desc:'水分+60 心情+40 饱食-5',             price:30,  effect:{ thirst:60, mood:40, satiety:-5 } },
-  { id:'juice',    cat:'drink',   icon:'🧪', name:'特制营养液',    desc:'水分+80 健康+25 心情+20',            price:48,  effect:{ thirst:80, health:25, mood:20 } },
+  { id:'water',    cat:'drink',   icon:'💧', name:'矿泉水',        desc:'水分+45',                            price:10,  effect:{ thirst:45 } },
+  { id:'milk',     cat:'drink',   icon:'🥛', name:'纯牛奶',        desc:'水分+50 心情+15 健康-10',            price:18,  effect:{ thirst:50, mood:15, health:-10 } }, 
+  { id:'juice',    cat:'drink',   icon:'🧃', name:'营养果汁',      desc:'水分+70 健康+5 心情+5',              price:25,  effect:{ thirst:70, health:5, mood:5 } },
+  { id:'tea',      cat:'drink',   icon:'🍵', name:'猫薄荷草茶',    desc:'水分+60 心情+40 饱食-5',             price:30,  effect:{ thirst:60, mood:40, satiety:-5 } },
+  { id:'coffee',   cat:'drink',   icon:'☕', name:'猫薄荷咖啡',    desc:'水分+40 心情+50 健康-15',            price:35,  effect:{ thirst:40, mood:50, health:-15 } },
+  { id:'nutri',    cat:'drink',   icon:'🧪', name:'特制营养液',    desc:'水分+80 健康+25 心情+20',            price:48,  effect:{ thirst:80, health:25, mood:20 } },
   // 洗澡清洁
-  { id:'spray',    cat:'hygiene', icon:'💦', name:'除臭喷雾',      desc:'清洁+30 心情-10',                    price:6,   effect:{ cleanliness:30, mood:-10 } }, // 猫咪一般很讨厌喷雾
+  { id:'spray',    cat:'hygiene', icon:'💦', name:'除臭喷雾',      desc:'清洁+30 心情-10',                    price:6,   effect:{ cleanliness:30, mood:-10 } }, 
+  { id:'soap',     cat:'hygiene', icon:'🧼', name:'香皂',          desc:'清洁+40 心情-15 健康+5',             price:10,  effect:{ cleanliness:40, mood:-15, health:5 } },
   { id:'dryshamp', cat:'hygiene', icon:'🧴', name:'免洗洗手液',    desc:'清洁+50 健康+5 心情-5',              price:15,  effect:{ cleanliness:50, health:5, mood:-5 } },
-  { id:'bath',     cat:'hygiene', icon:'🛁', name:'温水泡澡',      desc:'清洁+80 健康+15 心情-20',            price:28,  effect:{ cleanliness:80, health:15, mood:-20 } }, // 干净又卫生但恨水
+  { id:'brush',    cat:'hygiene', icon:'🪷', name:'牙刷套装',      desc:'清洁+60 健康+10 心情-15',            price:20,  effect:{ cleanliness:60, health:10, mood:-15 } },
+  { id:'shampoo',  cat:'hygiene', icon:'🧴', name:'香波沐浴露',    desc:'清洁+70 健康+10 心情-20',            price:25,  effect:{ cleanliness:70, health:10, mood:-20 } },
+  { id:'bath',     cat:'hygiene', icon:'🛁', name:'温水泡澡',      desc:'清洁+80 健康+15 心情-20',            price:28,  effect:{ cleanliness:80, health:15, mood:-20 } }, 
   { id:'spa',      cat:'hygiene', icon:'💆', name:'尊享猫咪SPA',   desc:'清洁+100 健康+30 心情+40',           price:65,  effect:{ cleanliness:100, health:30, mood:40 } },
   // 健康医疗
-  { id:'pill',     cat:'health',  icon:'💊', name:'苦味小药丸',    desc:'健康+25 心情-15',                    price:12,  effect:{ health:25, mood:-15 } },
-  { id:'probiotic',cat:'health',  icon:'🧫', name:'冻干益生菌',    desc:'健康+50 心情+5',                     price:35,  effect:{ health:50, mood:5 } },
-  { id:'vaccine',  cat:'health',  icon:'💉', name:'宠物医院体检',  desc:'健康+100 心情-30',                   price:70,  effect:{ health:100, mood:-30 } }, // 去医院会被吓到
+  { id:'bandage',  cat:'health',  icon:'🩹', name:'创可贴',        desc:'健康+15 心情-5',                     price:6,   effect:{ health:15, mood:-5 } },
+  { id:'pill',     cat:'health',  icon:'💊', name:'苦味小药丸',    desc:'健康+30 心情-15',                    price:12,  effect:{ health:30, mood:-15 } },
+  { id:'medicine', cat:'health',  icon:'💉', name:'猫咪保健品',    desc:'健康+45 心情+0',                     price:25,  effect:{ health:45, mood:0 } },
+  { id:'probiotic',cat:'health',  icon:'🧫', name:'冻干益生菌',    desc:'健康+60 心情+5',                     price:35,  effect:{ health:60, mood:5 } },
+  { id:'vaccine',  cat:'health',  icon:'🏥', name:'宠物医院体检',  desc:'健康+100 心情-30',                   price:70,  effect:{ health:100, mood:-30 } },
   // 娱乐玩具
   { id:'yarn',     cat:'fun',     icon:'🧶', name:'毛线球',        desc:'心情+25 饱食-5 水分-5',              price:8,   effect:{ mood:25, satiety:-5, thirst:-5 } },
-  { id:'toy',      cat:'fun',     icon:'🎀', name:'逗猫棒',        desc:'心情+45 健康+5 饱食-10 水分-10',     price:18,  effect:{ mood:45, health:5, satiety:-10, thirst:-10 } }, // 运动加健康
+  { id:'plush',    cat:'fun',     icon:'🧸', name:'毛绒玩具',      desc:'心情+35 饱食-5 水分-5 健康+2',       price:12,  effect:{ mood:35, satiety:-5, thirst:-5, health:2 } },
+  { id:'toy',      cat:'fun',     icon:'🎀', name:'逗猫棒',        desc:'心情+45 健康+5 饱食-10 水分-10',     price:18,  effect:{ mood:45, health:5, satiety:-10, thirst:-10 } },
+  { id:'toyset',   cat:'fun',     icon:'🎈', name:'猫咪玩具套装',  desc:'心情+60 健康+10 饱食-15 水分-15',    price:28,  effect:{ mood:60, health:10, satiety:-15, thirst:-15 } },
   { id:'mouse',    cat:'fun',     icon:'🐭', name:'电动老鼠',      desc:'心情+80 饱食-15 水分-15',            price:35,  effect:{ mood:80, satiety:-15, thirst:-15 } },
   { id:'laser',    cat:'fun',     icon:'🛸', name:'全息猫爬架',    desc:'心情+100 健康+20 饱食-20 水分-20',   price:75,  effect:{ mood:100, health:20, satiety:-20, thirst:-20 } },
   // 特殊道具
@@ -509,9 +518,28 @@ function renderShopGrid() {
         <div class="item-desc">${item.desc}</div>
         <div class="item-price">🪙 ${item.price}</div>
       </div>`).join('');
-    return `<div class="shop-cat-title">${label}</div>
-            <div class="shop-grid">${grid}</div>`;
+    
+    // 使用 style="display:flex..." 实现折叠标题，默认展开
+    return `
+      <div class="shop-cat-title" onclick="toggleShopCat('${catKey}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+        <span>${label}</span>
+        <span id="shop-icon-${catKey}" style="font-size:10px; color:#aaa; transition:transform 0.2s;">▼</span>
+      </div>
+      <div class="shop-grid" id="shop-grid-${catKey}" style="transition:all 0.2s;">${grid}</div>
+    `;
   }).join('');
+}
+
+function toggleShopCat(catKey) {
+  const grid = document.getElementById(`shop-grid-${catKey}`);
+  const icon = document.getElementById(`shop-icon-${catKey}`);
+  if (grid.style.display === 'none') {
+    grid.style.display = 'grid';
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    grid.style.display = 'none';
+    icon.style.transform = 'rotate(-90deg)';
+  }
 }
 
 function buyItem(id) {
