@@ -171,6 +171,11 @@ function applyDecay(withEvents = true) {
   if (gs.cleanliness < 20) hd -= 0.005 * rf;
   if (gs.satiety > 70 && gs.thirst > 70 && gs.cleanliness > 70) hd += 0.005;
   if (gs.state === 'trip') hd += 0.010;
+  
+  // 新增：学习和打工带来健康负担（疲劳）
+  if (gs.state === 'study') hd -= 0.025 * rf;
+  if (gs.state === 'work')  hd -= 0.045 * rf;
+  
   gs.health = clamp(gs.health + hd, 100);
 
   const moodDecay = Math.max(0.001, 0.003 - (iq-1)*0.0005);
@@ -181,6 +186,11 @@ function applyDecay(withEvents = true) {
   if (gs.health < 30)  md -= 0.010;
   if (gs.satiety < 20) md -= 0.015;
   if (gs.state === 'trip') md += 0.020;
+
+  // 新增：学习与打工会导致心情额外烦躁
+  if (gs.state === 'study') md -= 0.035;
+  if (gs.state === 'work')  md -= 0.055;
+
   gs.mood = clamp(gs.mood + md, 100);
 
   // Work earnings — every 240 ticks, based on current job
