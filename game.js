@@ -97,7 +97,7 @@ let selectedCatData = null;
 function saveGame() {
   if (!gs) return;
   gs.lastSaveTime = Date.now();
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ gs, logs, tickMs })); } catch(e) {}
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ gs, logs, tickMs, isPaused })); } catch(e) {}
 }
 
 function loadGame() {
@@ -108,6 +108,7 @@ function loadGame() {
     gs = data.gs;
     logs = data.logs || [];
     if (data.tickMs) tickMs = data.tickMs;
+    if (data.isPaused !== undefined) isPaused = data.isPaused;
     return true;
   } catch(e) { return false; }
 }
@@ -118,6 +119,11 @@ function clearSave() {
 
 // ---------- 离线计算 ----------
 function applyOfflineTicks() {
+  if (isPaused) {
+    gs.lastSaveTime = Date.now();
+    saveGame();
+    return;
+  }
   const elapsed = Date.now() - gs.lastSaveTime;
   const total = Math.min(Math.floor(elapsed / tickMs), Math.floor(8*3600000 / tickMs));
   if (total <= 0) {
@@ -261,7 +267,8 @@ function togglePause() {
     btn.textContent = isPaused ? '▶ 恢复时间' : '⏸ 暂停时间';
     btn.className = isPaused ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-ghost';
   }
-  addLog(isPaused ? '⏸ 时间已暂停（调试模式）' : '▶ 时间已恢复');
+  addLog(isPaused ? '⏸ 时间已暂停' : '▶ 时间已恢复');
+  saveGame();
 }
 
 // ---------- 领养 ----------
@@ -330,6 +337,12 @@ function launchGame() {
   // Show floating backpack button
   const fab = document.getElementById('fabBag');
   if (fab) fab.style.display = 'flex';
+  
+  const btn = document.getElementById('pauseBtn');
+  if (btn) {
+    btn.textContent = isPaused ? '▶ 恢复时间' : '⏸ 暂停时间';
+    btn.className = isPaused ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-ghost';
+  }
 
   renderShopGrid();
   updateUI();
