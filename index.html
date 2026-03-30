@@ -345,11 +345,13 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
   display:none; position:fixed; inset:0;
   background:rgba(0,0,0,.4); z-index:200;
   align-items:center; justify-content:center; backdrop-filter:blur(4px);
+  touch-action: none; overscroll-behavior: none;
 }
 #modalOverlay.show { display:flex; }
 .modal-box {
   background:#fff; border-radius:22px; padding:26px 22px;
   max-width:330px; width:90%; text-align:center; animation:popIn .22s ease;
+  touch-action: auto; overscroll-behavior: contain;
 }
 @keyframes popIn { from{transform:scale(.85);opacity:0} to{transform:scale(1);opacity:1} }
 .modal-icon    { font-size:44px; margin-bottom:10px; }

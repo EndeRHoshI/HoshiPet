@@ -348,6 +348,7 @@ function adoptCat() {
 // ---------- 启动 ----------
 function launchGame() {
   document.getElementById('adoptScreen').style.display = 'none';
+  renderLog();
   document.getElementById('appContainer').style.display = 'block';
   document.getElementById('navBar').style.display = 'flex';
   // goldDisplay no longer exists in template; skip
@@ -420,8 +421,8 @@ function updateUI() {
   renderInventory('inventoryList');
 }
 
-function openBackpackModal() {
-  if (!gs) return;
+function getBagModalHTML() {
+  if (!gs) return '';
   const catOrder = ['food','drink','hygiene','health','fun','special'];
   let html = '';
   catOrder.forEach(catKey => {
@@ -438,8 +439,12 @@ function openBackpackModal() {
     if (!entries.length) return;
     html += `<div class="inv-category">${ITEM_CATEGORIES[catKey].label}</div>` + entries.join('');
   });
-  const inner = html || '<div class="inv-empty">背包空空如也，去商城买些东西吧~</div>';
-  showModal('🎒','随身背包', `<div style="text-align:left;max-height:300px;overflow-y:auto;margin:-4px -2px">${inner}</div>`,
+  return html || '<div class="inv-empty">背包空空如也，去商城买些东西吧~</div>';
+}
+
+function openBackpackModal() {
+  const inner = getBagModalHTML();
+  showModal('🎒','随身背包', `<div id="bagModalContent" style="text-align:left;max-height:300px;overflow-y:auto;margin:-4px -2px">${inner}</div>`,
     [
       {label:'前往商城 🛒', cls:'btn-primary', fn:() => { switchScene('shop'); closeModalDirect(); }},
       {label:'关闭', fn:closeModalDirect}
@@ -448,8 +453,8 @@ function openBackpackModal() {
 
 function useItemFromModal(id) {
   useItem(id);
-  closeModalDirect();
-  setTimeout(openBackpackModal, 80);
+  const content = document.getElementById('bagModalContent');
+  if (content) content.innerHTML = getBagModalHTML();
 }
 
 function setBar(id, val) {
