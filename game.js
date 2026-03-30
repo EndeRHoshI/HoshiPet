@@ -54,9 +54,9 @@ const ITEMS = [
   // 健康医疗
   { id:'bandage',  cat:'health',  icon:'🩹', name:'创可贴',        desc:'健康+15 心情-5',                     price:6,   effect:{ health:15, mood:-5 } },
   { id:'pill',     cat:'health',  icon:'💊', name:'苦味小药丸',    desc:'健康+30 心情-15',                    price:12,  effect:{ health:30, mood:-15 } },
-  { id:'medicine', cat:'health',  icon:'💉', name:'猫咪保健品',    desc:'健康+45 心情+0',                     price:25,  effect:{ health:45, mood:0 } },
-  { id:'probiotic',cat:'health',  icon:'🧫', name:'冻干益生菌',    desc:'健康+60 心情+5',                     price:35,  effect:{ health:60, mood:5 } },
-  { id:'vaccine',  cat:'health',  icon:'🏥', name:'宠物医院体检',  desc:'健康+100 心情-30',                   price:70,  effect:{ health:100, mood:-30 } },
+  { id:'medicine', cat:'health',  icon:'💉', name:'猫咪疫苗',      desc:'健康+45 心情-20',                    price:25,  effect:{ health:45, mood:-20 } },
+  { id:'probiotic',cat:'health',  icon:'🧫', name:'冻干益生菌',    desc:'健康+20 心情+5',                     price:35,  effect:{ health:20, mood:5 } },
+  { id:'vaccine',  cat:'health',  icon:'🏥', name:'宠物医院体检',  desc:'健康+80 心情-30',                    price:70,  effect:{ health:80, mood:-30 } },
   // 娱乐玩具
   { id:'yarn',     cat:'fun',     icon:'🧶', name:'毛线球',        desc:'心情+25 饱食-5 水分-5',              price:8,   effect:{ mood:25, satiety:-5, thirst:-5 } },
   { id:'plush',    cat:'fun',     icon:'🧸', name:'毛绒玩具',      desc:'心情+35 饱食-5 水分-5 健康+2',       price:12,  effect:{ mood:35, satiety:-5, thirst:-5, health:2 } },
