@@ -485,9 +485,7 @@ function getMoodText() {
 }
 
 function updateStateButtons() {
-  ['idle','work','study','trip'].forEach(s => {
-    document.getElementById('stateBtn-' + s)?.classList.toggle('active', gs.state === s);
-  });
+  // 弃用：不再为日程按钮提供持久性的焦距样式
 }
 
 // ---------- 场景切换 ----------
@@ -781,78 +779,159 @@ function renderLog() {
 // ---------- 职业 UI ----------
 function updateProfessionUI() {
   if (!gs) return;
-  const panel = document.getElementById('professionPanel');
-  if (!panel) return;
+  const content = document.getElementById('currentStateContent');
+  if (!content) return;
 
-  if (gs.state === 'study') {
-    // Show all professions: locked / studying / unlocked
-    const studying = gs.studyingProfessionId ? PROFESSIONS.find(p => p.id === gs.studyingProfessionId) : null;
-    panel.innerHTML = `
-      <div class="prof-panel-title">📚 选择要学习的职业</div>
-      ${studying ? (() => {
-        const prog = gs.studyProgress?.[studying.id] || 0;
-        return `<div class="study-progress-bar-wrap">
-          <div class="study-prog-label">${studying.icon} 正在学习「${studying.name}」…&nbsp;
-            <span>已学 ${formatTime(prog)} / 共需 ${formatTime(studying.learnTicks)}</span></div>
-          <div class="study-prog-bg"><div class="study-prog-fill" style="width:${Math.min(100,(prog/studying.learnTicks)*100).toFixed(1)}%"></div></div>
-        </div>`;
-      })() : ''}
-      <div class="prof-grid">${PROFESSIONS.map(p => {
-        const learned  = gs.learnedProfessions[p.id];
-        const isStudying = gs.studyingProfessionId === p.id;
-        const reqMet   = p.req.every(r => gs.learnedProfessions[r]);
-        const canStudy = !learned && !isStudying && reqMet;
-        const reqNames = p.req.map(r => PROFESSIONS.find(pp => pp.id === r)?.name || r).join('、');
-        return `<div class="prof-card ${learned?' prof-learned':''} ${isStudying?' prof-studying':''} ${!reqMet&&!learned?' prof-locked':''}"
-          onclick="${canStudy ? `selectStudyProfession('${p.id}')` : ''}">
-          <div class="prof-icon">${p.icon}</div>
-          <div class="prof-name">${p.name}</div>
-          <div class="prof-desc">${learned?'✅ 已掌握': isStudying?'📖 学习中': !reqMet?`🔒 需先学：${reqNames}`: `⏱ 需 ${formatTime(p.learnTicks)}`}</div>
-          <div class="prof-wage">打工收益：${p.wage}金 / ${formatTime(240)}</div>
-        </div>`;
-      }).join('')}</div>`;
+  if (gs.state === 'idle') {
+    content.innerHTML = `<div style="font-size:13px;color:var(--text-lt);padding:8px">🛋️ 正在舒适地休息，缓慢恢复体力中...</div>`;
   } else if (gs.state === 'work') {
-    const learnedCount = Object.keys(gs.learnedProfessions).filter(k => gs.learnedProfessions[k]).length;
-    panel.innerHTML = `
-      <div class="prof-panel-title">🛠️ 选择打工职业</div>
-      ${learnedCount === 0
-        ? `<div class="prof-empty">还没有掌握任何职业，先去「学习」状态学习吧！目前只能做<b>零工（3金 / ${formatTime(240)}）</b>。</div>`
-        : `<div class="prof-grid">${PROFESSIONS.map(p => {
-            if (!gs.learnedProfessions[p.id]) return '';
-            const active = gs.currentJobId === p.id;
-            return `<div class="prof-card ${active?' prof-active':''}" onclick="selectJob('${p.id}')">
-              <div class="prof-icon">${p.icon}</div>
-              <div class="prof-name">${p.name}</div>
-              <div class="prof-desc">${p.desc}</div>
-              <div class="prof-wage">${active?'✅ 当前职业<br>':''}收益：${p.wage}金 / ${formatTime(240)}</div>
-            </div>`;
-          }).join('')}</div>`}`;
-  } else {
-    panel.innerHTML = '';
+    if (!gs.currentJobId) {
+      content.innerHTML = `<div style="font-size:13px;color:#e17055;padding:8px">⚠ 尚未指定工作，正在摸鱼</div>`;
+      return;
+    }
+    const prof = PROFESSIONS.find(p => p.id === gs.currentJobId);
+    if (!prof) return;
+    const nextWageTicks = 240 - (gs.ticks % 240);
+    content.innerHTML = `
+      <div style="font-size:32px;margin-bottom:6px;">${prof.icon}</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px;">正在进行「${prof.name}」打工</div>
+      <div style="font-size:12px;color:var(--text-lt);">
+        收益：${prof.wage}金 / ${formatTime(240)}<br>
+        距离发薪还需 ${formatTime(nextWageTicks)}
+      </div>
+    `;
+  } else if (gs.state === 'study') {
+    if (!gs.studyingProfessionId) {
+      content.innerHTML = `<div style="font-size:13px;color:#e17055;padding:8px">⚠ 尚未安排系统课程</div>`;
+      return;
+    }
+    const prof = PROFESSIONS.find(p => p.id === gs.studyingProfessionId);
+    if (!prof) return;
+    const prog = gs.studyProgress?.[prof.id] || 0;
+    const pct = Math.min(100, (prog / prof.learnTicks) * 100).toFixed(1);
+    content.innerHTML = `
+      <div class="study-progress-bar-wrap" style="margin:0; text-align:left;">
+        <div class="study-prog-label">${prof.icon} 正在钻研「${prof.name}」…&nbsp;
+          <span>已学 ${formatTime(prog)} / 需 ${formatTime(prof.learnTicks)}</span></div>
+        <div class="study-prog-bg"><div class="study-prog-fill" style="width:${pct}%"></div></div>
+      </div>
+    `;
   }
 }
 
+function showToast(msg) {
+  const el = document.getElementById('petActionText');
+  if (el) {
+    el.textContent = `${gs.name} ${msg}`;
+    el.style.opacity = 1;
+    el.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(() => {
+      el.style.opacity = 0;
+      el.style.transform = 'translateX(-50%) translateY(10px)';
+    }, 2000);
+  }
+}
+
+function openStudyModal() {
+  let html = `<div class="prof-grid">` + PROFESSIONS.map(p => {
+    const learned  = gs.learnedProfessions[p.id];
+    const reqMet   = p.req.every(r => gs.learnedProfessions[r]);
+    const canStudy = !learned && reqMet;
+    const reqNames = p.req.map(r => PROFESSIONS.find(pp => pp.id === r)?.name || r).join('、');
+    return `<div class="prof-card ${learned?' prof-learned':''} ${!reqMet&&!learned?' prof-locked':''}"
+      onclick="${canStudy ? `selectStudyProfession('${p.id}')` : ''}">
+      <div class="prof-icon">${p.icon}</div>
+      <div class="prof-name">${p.name}</div>
+      <div class="prof-desc">${learned?'✅ 已掌握': !reqMet?`🔒 需先学：${reqNames}`: `⏱ 需 ${formatTime(p.learnTicks)}`}</div>
+      <div class="prof-wage">打工收益：${p.wage}金</div>
+    </div>`;
+  }).join('') + `</div>`;
+  showModal('📚', '安排重点学习', `
+    <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
+    <div class="hide-scroll" style="text-align:left;max-height:350px;overflow-y:auto;margin:-4px -2px">${html}</div>`, 
+    [{label:'稍后决定', fn:closeModalDirect}]);
+}
+
+function openWorkModal() {
+  const learnedCount = Object.keys(gs.learnedProfessions).filter(k => gs.learnedProfessions[k]).length;
+  let html = '';
+  if (learnedCount === 0) {
+    html = `<div class="prof-empty">还没有掌握任何高级职业，先去学习吧！目前只能做<b>零工（3金 / ${formatTime(240)}）</b>。</div>`;
+  }
+  html += `<div class="prof-grid">${PROFESSIONS.map(p => {
+    if (!gs.learnedProfessions[p.id]) return '';
+    return `<div class="prof-card" onclick="selectJob('${p.id}')">
+      <div class="prof-icon">${p.icon}</div>
+      <div class="prof-name">${p.name}</div>
+      <div class="prof-desc">${p.desc}</div>
+      <div class="prof-wage">收益：${p.wage}金 / ${formatTime(240)}</div>
+    </div>`;
+  }).join('')}</div>`;
+
+  showModal('🛠️', '选择打工岗位', `
+    <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
+    <div class="hide-scroll" style="text-align:left;max-height:350px;overflow-y:auto;margin:-4px -2px">${html}</div>`, 
+    [{label:'稍后决定', fn:closeModalDirect}]);
+}
+
+function requestState(target) {
+  if (gs.state === target && target === 'idle') {
+    showToast('已经在舒适地休息啦~');
+    return;
+  }
+  if (target === 'idle') { setState('idle'); return; }
+  if (target === 'study') { openStudyModal(); return; }
+  if (target === 'work') { openWorkModal(); return; }
+}
+
 function selectStudyProfession(id) {
+  if (gs.state === 'study' && gs.studyingProfessionId === id) {
+    showToast('已经在钻研这门课程啦！');
+    closeModalDirect();
+    return;
+  }
   const prof = PROFESSIONS.find(p => p.id === id);
   if (!prof || gs.learnedProfessions[id]) return;
   const reqMet = prof.req.every(r => gs.learnedProfessions[r]);
   if (!reqMet) { addLog(`🔒 需要先学会：${prof.req.map(r=>PROFESSIONS.find(p=>p.id===r)?.name).join('、')}`); return; }
+  
+  const isSwapping = (gs.state === 'study');
   gs.studyingProfessionId = id;
   if (typeof gs.studyProgress !== 'object') gs.studyProgress = {};
   if (!gs.studyProgress[id]) gs.studyProgress[id] = 0;
-  const remaining = prof.learnTicks - gs.studyProgress[id];
-  addLog(`📖 ${gs.name} 开始学习「${prof.icon}${prof.name}」，还需要 ${formatTime(remaining)}！`);
-  updateProfessionUI();
-  saveGame();
+  
+  if (isSwapping) {
+    addLog(`🔄 ${gs.name} 转而钻研「${prof.icon}${prof.name}」啦！`);
+    updateProfessionUI();
+    updateUI();
+    saveGame();
+  } else {
+    setState('study');
+  }
+  closeModalDirect();
 }
 
 function selectJob(id) {
+  if (gs.state === 'work' && gs.currentJobId === id) {
+    showToast('已经在认真做这份工作啦！');
+    closeModalDirect();
+    return;
+  }
   if (!gs.learnedProfessions[id]) return;
-  const prof = PROFESSIONS.find(p => p.id === id);
+  
+  const isSwapping = (gs.state === 'work');
   gs.currentJobId = id;
-  addLog(`💼 ${gs.name} 上岗了「${prof.icon}${prof.name}」，工资 ${prof.wage}金 / ${formatTime(240)}！`);
-  updateProfessionUI();
-  saveGame();
+  const prof = PROFESSIONS.find(p => p.id === id);
+  
+  if (isSwapping) {
+    addLog(`🔄 ${gs.name} 换岗到了「${prof.icon}${prof.name}」！`);
+    updateProfessionUI();
+    updateUI();
+    saveGame();
+  } else {
+    setState('work');
+  }
+  closeModalDirect();
 }
 
 // ---------- 开发者测试锁 ----------
