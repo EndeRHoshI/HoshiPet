@@ -144,11 +144,11 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 .attr-chip     { font-size:10px; background:#fff0e6; color:#e17055; padding:2px 6px; border-radius:8px; font-weight:700; }
 
 .name-row { display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:8px; }
-input[type="text"] {
+input[type="text"], input[type="password"] {
   padding:10px 16px; border:2px solid var(--border); border-radius:30px;
   font-size:15px; font-family:'Nunito',sans-serif; outline:none; width:190px; transition:border-color .2s;
 }
-input[type="text"]:focus { border-color:var(--primary); }
+input[type="text"]:focus, input[type="password"]:focus { border-color:var(--primary); }
 
 /* ── Buttons ── */
 .btn {
@@ -517,7 +517,14 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="unlockDebugCard">
+      <div class="sys-row" style="padding-bottom:0">
+        <div><div class="sys-row-label">🔐 开发者认证</div><div class="sys-row-sub">输入管理员特征码以唤醒核心设置</div></div>
+        <button class="btn btn-sm btn-ghost" onclick="unlockDebug()">验证</button>
+      </div>
+    </div>
+
+    <div class="card" id="debugCard" style="display:none">
       <div class="card-title">🔧 调试设置</div>
       <div class="sys-row">
         <div>

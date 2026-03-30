@@ -358,6 +358,13 @@ function launchGame() {
   const fab = document.getElementById('fabBag');
   if (fab) fab.style.display = 'flex';
   
+  if (gs && gs.devUnlocked) {
+    const dc = document.getElementById('debugCard');
+    const uc = document.getElementById('unlockDebugCard');
+    if (dc) dc.style.display = 'block';
+    if (uc) uc.style.display = 'none';
+  }
+  
   const btn = document.getElementById('pauseBtn');
   if (btn) {
     btn.textContent = isPaused ? '▶ 恢复时间' : '⏸ 暂停时间';
@@ -846,6 +853,33 @@ function selectJob(id) {
   addLog(`💼 ${gs.name} 上岗了「${prof.icon}${prof.name}」，工资 ${prof.wage}金 / ${formatTime(240)}！`);
   updateProfessionUI();
   saveGame();
+}
+
+// ---------- 开发者测试锁 ----------
+function unlockDebug() {
+  showModal('🔑', '开发者权限验证', 
+    `<div style="margin-top:10px;text-align:center;">
+       <input type="password" id="devPwdInput" placeholder="输入特征码" style="width:190px;text-align:center">
+     </div>`, 
+    [
+      { label: '取消', fn: closeModalDirect },
+      { label: '解绑', cls: 'btn-danger', fn: () => {
+          const val = document.getElementById('devPwdInput').value;
+          if (val === '19951215') {
+            document.getElementById('debugCard').style.display = 'block';
+            document.getElementById('unlockDebugCard').style.display = 'none';
+            gs.devUnlocked = true;
+            saveGame();
+            closeModalDirect();
+            addLog('🔓 底层权限解除，物理环境控制权限已获取！');
+          } else {
+            alert('验证失败，请核对特征码！');
+            document.getElementById('devPwdInput').value = '';
+          }
+        } 
+      }
+    ]
+  );
 }
 
 // ---------- 入口 ----------
