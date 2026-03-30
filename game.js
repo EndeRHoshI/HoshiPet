@@ -134,7 +134,7 @@ function applyOfflineTicks() {
     return;
   }
   const elapsed = Date.now() - gs.lastSaveTime;
-  const total = Math.min(Math.floor(elapsed / tickMs), Math.floor(8*3600000 / tickMs));
+  const total = Math.floor(elapsed / tickMs);
   if (total <= 0) {
     saveGame();
     return;
@@ -519,13 +519,13 @@ function renderShopGrid() {
         <div class="item-price">🪙 ${item.price}</div>
       </div>`).join('');
     
-    // 使用 style="display:flex..." 实现折叠标题，默认展开
+    // 使用 style="display:flex..." 实现折叠标题，默认收起
     return `
       <div class="shop-cat-title" onclick="toggleShopCat('${catKey}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
         <span>${label}</span>
-        <span id="shop-icon-${catKey}" style="font-size:10px; color:#aaa; transition:transform 0.2s;">▼</span>
+        <span id="shop-icon-${catKey}" style="font-size:10px; color:#aaa; transition:transform 0.2s; transform:rotate(-90deg);">▼</span>
       </div>
-      <div class="shop-grid" id="shop-grid-${catKey}" style="transition:all 0.2s;">${grid}</div>
+      <div class="shop-grid" id="shop-grid-${catKey}" style="transition:all 0.2s; display:none;">${grid}</div>
     `;
   }).join('');
 }
