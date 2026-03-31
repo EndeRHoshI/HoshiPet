@@ -118,6 +118,9 @@ function loadGame() {
     logs = data.logs || [];
     if (data.tickMs) tickMs = data.tickMs;
     if (data.isPaused !== undefined) isPaused = data.isPaused;
+    // 数据迁移
+    if (gs.workTargetTicks === undefined)  gs.workTargetTicks = 240;
+    if (gs.workTicksElapsed === undefined) gs.workTicksElapsed = 0;
     return true;
   } catch(e) { return false; }
 }
@@ -202,12 +205,19 @@ function applyDecay(withEvents = true) {
 
   gs.mood = clamp(gs.mood + md, 100);
 
-  // Work earnings — every 240 ticks, based on current job
-  if (gs.state === 'work' && gs.ticks > 0 && gs.ticks % 240 === 0) {
-    const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
-    const earned = job ? job.wage : 3;
-    gs.gold += earned;
-    if (withEvents) addLog(`${job ? job.icon : '🛠️'} ${gs.name} 完成了一轮【${job ? job.name : '零工'}】，赚到 ${earned} 金币！`);
+  // --- 打工与学习结算 ---
+  if (gs.state === 'work') {
+    gs.workTicksElapsed++;
+    if (gs.workTicksElapsed >= gs.workTargetTicks) {
+      const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
+      const baseWage = job ? job.wage : 3;
+      const multiplier = gs.workTargetTicks / 240; 
+      const totalEarned = Math.floor(baseWage * multiplier);
+      gs.gold += totalEarned;
+      gs.workTicksElapsed = 0;
+      gs.state = 'idle'; // 班次完成回归空闲
+      if (withEvents) addLog(`💰 ${gs.name} 勤奋地完成了【${job ? job.name : '零工'}】${multiplier * 2}小时班次，获得报酬 ${totalEarned} 金币！`);
+    }
   }
   // Study: increment study progress for chosen profession
   if (gs.state === 'study' && gs.studyingProfessionId) {
@@ -338,6 +348,7 @@ function adoptCat() {
     satiety: 100, thirst: 100, cleanliness: 100, health: 100, mood: 100,
     state: 'idle', inventory: {}, isDead: false,
     learnedProfessions: {}, studyingProfessionId: null, studyProgress: {}, currentJobId: null,
+    workTargetTicks: 240, workTicksElapsed: 0,
   };
   logs = [];
   addLog(`🎉 ${name} 来到了新家，它看起来很开心！`);
@@ -503,6 +514,23 @@ function setState(newState) {
   if (!gs) return;
   if (gs.isDead) { addLog('⚠️ 宠物已离世，无法切换状态'); return; }
   if (gs.state === newState) return;
+
+  // --- 打工提前退出结算 (打回 8 折) ---
+  if (gs.state === 'work' && gs.workTicksElapsed > 0) {
+    const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
+    const baseWage = job ? job.wage : 3;
+    const multiplier = gs.workTargetTicks / 240;
+    const totalWage = baseWage * multiplier;
+    const progress = gs.workTicksElapsed / gs.workTargetTicks;
+    
+    const earned = Math.floor(progress * totalWage * 0.8);
+    if (earned > 0) {
+      gs.gold += earned;
+      addLog(`💼 ${gs.name} 提前结束了打工，按工时进度的 80% 结算，获得 ${earned} 金币。`);
+    }
+    gs.workTicksElapsed = 0; // 重置进度
+  }
+
   const labels = { idle:'空闲', work:'打工', study:'学习', trip:'出游' };
   gs.state = newState;
   if (newState === 'trip') gs.tripTicks = 0;
@@ -779,15 +807,16 @@ function updateProfessionUI() {
       content.innerHTML = `<div style="font-size:13px;color:#e17055;padding:8px">⚠ 尚未指定工作，正在摸鱼</div>`;
       return;
     }
-    const prof = PROFESSIONS.find(p => p.id === gs.currentJobId);
+    const prof = gs.currentJobId ? PROFESSIONS.find(p => p.id === gs.currentJobId) : { name:'零工', icon:'🛠️' };
     if (!prof) return;
-    const nextWageTicks = 240 - (gs.ticks % 240);
+    const pct = Math.min(100, (gs.workTicksElapsed / gs.workTargetTicks) * 100).toFixed(1);
+    const remaining = gs.workTargetTicks - gs.workTicksElapsed;
+    
     content.innerHTML = `
-      <div style="font-size:32px;margin-bottom:6px;">${prof.icon}</div>
-      <div style="font-size:14px;font-weight:700;margin-bottom:4px;">正在进行「${prof.name}」打工</div>
-      <div style="font-size:12px;color:var(--text-lt);">
-        收益：${prof.wage}金 / ${formatTime(240)}<br>
-        距离发薪还需 ${formatTime(nextWageTicks)}
+      <div class="study-progress-bar-wrap" style="margin:0; text-align:left;">
+        <div class="study-prog-label">${prof.icon} 正在「${prof.name}」打工…&nbsp;
+          <span>${pct}% · 剩 ${formatTime(remaining)}</span></div>
+        <div class="study-prog-bg"><div class="study-prog-fill" style="width:${pct}%; background:linear-gradient(90deg, #6c5ce7, #a29bfe)"></div></div>
       </div>
     `;
   } else if (gs.state === 'study') {
@@ -846,21 +875,42 @@ function openWorkModal() {
   const learnedCount = Object.keys(gs.learnedProfessions).filter(k => gs.learnedProfessions[k]).length;
   let html = '';
   if (learnedCount === 0) {
-    html = `<div class="prof-empty">还没有掌握任何高级职业，先去学习吧！目前只能做<b>零工（3金 / ${formatTime(240)}）</b>。</div>`;
+    html = `
+      <div class="prof-empty">还没有掌握任何高级职业，先去做零工吧！</div>
+      <div class="prof-grid">
+        <div class="prof-card">
+          <div class="prof-icon">🛠️</div>
+          <div class="prof-name">打零工</div>
+          <div class="prof-desc">搬砖、洗盘子，只要出力气就能赚点小钱。</div>
+          <div class="prof-wage">基准：3金 / 2h</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:8px; width:100%">
+            <button class="btn btn-sm btn-primary" onclick="selectJob(null, 240)">2h</button>
+            <button class="btn btn-sm btn-primary" onclick="selectJob(null, 480)">4h</button>
+            <button class="btn btn-sm btn-primary" onclick="selectJob(null, 960)">8h</button>
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    html += `<div class="prof-grid">${PROFESSIONS.map(p => {
+      if (!gs.learnedProfessions[p.id]) return '';
+      return `<div class="prof-card">
+        <div class="prof-icon">${p.icon}</div>
+        <div class="prof-name">${p.name}</div>
+        <div class="prof-desc">${p.desc}</div>
+        <div class="prof-wage">基准：${p.wage}金 / 2h</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:8px; width:100%">
+          <button class="btn btn-sm btn-primary" onclick="selectJob('${p.id}', 240)">2h</button>
+          <button class="btn btn-sm btn-primary" onclick="selectJob('${p.id}', 480)">4h</button>
+          <button class="btn btn-sm btn-primary" onclick="selectJob('${p.id}', 960)">8h</button>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
   }
-  html += `<div class="prof-grid">${PROFESSIONS.map(p => {
-    if (!gs.learnedProfessions[p.id]) return '';
-    return `<div class="prof-card" onclick="selectJob('${p.id}')">
-      <div class="prof-icon">${p.icon}</div>
-      <div class="prof-name">${p.name}</div>
-      <div class="prof-desc">${p.desc}</div>
-      <div class="prof-wage">收益：${p.wage}金 / ${formatTime(240)}</div>
-    </div>`;
-  }).join('')}</div>`;
 
-  showModal('🛠️', '选择打工岗位', `
+  showModal('🛠️', '选择打工岗位及工时', `
     <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
-    <div class="hide-scroll" style="text-align:left;max-height:350px;overflow-y:auto;margin:-4px -2px">${html}</div>`, 
+    <div class="hide-scroll" style="text-align:left;max-height:400px;overflow-y:auto;padding-bottom:10px">${html}</div>`, 
     [{label:'稍后决定', fn:closeModalDirect}]);
 }
 
@@ -901,20 +951,23 @@ function selectStudyProfession(id) {
   closeModalDirect();
 }
 
-function selectJob(id) {
-  if (gs.state === 'work' && gs.currentJobId === id) {
-    showToast('已经在认真做这份工作啦！');
+function selectJob(id, durationTicks = 240) {
+  if (gs.state === 'work' && gs.currentJobId === id && gs.workTargetTicks === durationTicks) {
+    showToast('已经在进行同样的班次啦！');
     closeModalDirect();
     return;
   }
-  if (!gs.learnedProfessions[id]) return;
   
   const isSwapping = (gs.state === 'work');
+  // 如果是换岗，已经在 setState 触发了提前结算奖励逻辑，所以此处直接重置
   gs.currentJobId = id;
-  const prof = PROFESSIONS.find(p => p.id === id);
+  gs.workTargetTicks = durationTicks;
+  gs.workTicksElapsed = 0;
+  
+  const prof = id ? PROFESSIONS.find(p => p.id === id) : { name:'零工', icon:'🛠️' };
   
   if (isSwapping) {
-    addLog(`🔄 ${gs.name} 换岗到了「${prof.icon}${prof.name}」！`);
+    addLog(`🔄 ${gs.name} 换到了「${prof.icon}${prof.name}」，工时 ${durationTicks/120}h！`);
     updateProfessionUI();
     updateUI();
     saveGame();
