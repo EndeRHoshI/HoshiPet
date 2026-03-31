@@ -614,16 +614,7 @@ function useItem(id) {
   }
 
   // 动作气泡浮现
-  const el = document.getElementById('petActionText');
-  if (el) {
-    el.textContent = `${gs.name} ${flavor}！`;
-    el.style.opacity = 1;
-    el.style.transform = 'translateY(0)';
-    setTimeout(() => {
-      el.style.opacity = 0;
-      el.style.transform = 'translateY(10px)';
-    }, 2000);
-  }
+  showToast(`${flavor}！`);
 
   addLog(`🎁 给 ${gs.name} 使用「${item.icon}${item.name}」，${flavor}。(${changed.join(' ')})`);
 
