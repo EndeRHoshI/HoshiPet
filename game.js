@@ -404,9 +404,8 @@ function updateUI() {
   setEl('rarityTag', el => el.style.display = gs.cat.rarity === 'rare' ? '' : 'none');
 
   // Age & mood text
-  const months = 2 + Math.floor(gs.ticks / 200);
-  const ageStr = months < 12 ? `${months} 个月` : `${(months/12).toFixed(1)} 岁`;
-  setEl('ageDisplay', el => el.textContent = `年龄：${ageStr}`);
+  const hours = Math.floor((Date.now() - gs.adoptTime) / 3600000);
+  setEl('ageDisplay', el => el.textContent = `到家：${hours} 小时`);
   setEl('moodLine', el => el.textContent = getMoodText());
 
   // Gold in home scene (multiple elements via class)
