@@ -110,6 +110,15 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 
 /* ── Typography ── */
 .page-title { font-size:26px; font-weight:900; margin-bottom:3px; }
+.mood-line { font-size:12px; color:var(--text-lt); }
+.mood-line-wrap { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.attr-view-btn {
+  background: #fff8f0; border: 1.5px solid #fce4d6; border-radius: 20px;
+  padding: 3px 10px; font-size: 11px; font-weight: 800; color: #e17055;
+  cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;
+}
+.attr-view-btn:hover { background: #fce4d6; transform: scale(1.05); }
+.attr-view-btn i { font-size: 12px; }
 .page-sub   { font-size:13px; color:var(--text-lt); margin-bottom:16px; }
 
 /* ── Cards / Layout ── */
@@ -225,12 +234,12 @@ input[type="text"]:focus, input[type="password"]:focus { border-color:var(--prim
 .fab-bag:hover { transform:scale(1.1); }
 
 /* mini stats inside cat card - right column */
-.cat-stats-mini { display:flex; flex-direction:column; gap:6px; justify-content:center; padding-left:10px; border-left:1px solid var(--border); }
-.stat-mini-row { display:flex; align-items:center; gap:5px; }
-.stat-mini-label { font-size:10px; width:48px; flex-shrink:0; white-space:nowrap; }
-.bar-bg-mini { flex:1; background:#f0e6e0; border-radius:20px; height:6px; overflow:hidden; }
+.cat-stats-mini { display:flex; flex-direction:column; gap:4px; justify-content:center; padding-left:10px; border-left:1.5px solid #f1f2f6; }
+.stat-mini-row { display:grid; grid-template-columns:46px 1fr 24px; gap:8px; align-items:center; }
+.stat-mini-label { font-size:10px; white-space:nowrap; color:#636e72; }
+.bar-bg-mini { min-width:0; background:#f0e6e0; border-radius:20px; height:6px; overflow:hidden; }
 .bar-fill-mini { height:100%; border-radius:20px; transition:width .5s ease; }
-.stat-mini-val { font-size:10px; font-weight:700; width:22px; text-align:right; flex-shrink:0; color:var(--text-lt); }
+.stat-mini-val { font-size:10px; font-weight:900; text-align:right; color:#2d3436; }
 
 .offline-notice {
   background:linear-gradient(135deg,#a29bfe,#6c5ce7); border-radius:14px;
@@ -408,10 +417,13 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
                 <span class="tag tag-rare" id="rarityTag" style="display:none">✨ 稀有</span>
                 <div class="home-gold">🪙 <span class="home-gold-val">0</span></div>
               </div>
-              <div class="mood-line" id="moodLine">😊 心情不错</div>
+              <div class="mood-line-wrap">
+                <div class="attr-view-btn" onclick="showCatStats()" title="查看猫咪天赋属性">🐾 天赋</div>
+                <div class="mood-line" id="moodLine">😊 心情不错</div>
+              </div>
             </div>
             <!-- 右：五维进度条 -->
-            <div class="cat-stats-mini" style="flex:1; max-width:260px; min-width:180px; justify-content:center">
+            <div class="cat-stats-mini" style="flex:0 0 auto; max-width:260px; justify-content:center">
               <div class="stat-mini-row">
                 <span class="stat-mini-label">🍚饱食</span>
                 <div class="bar-bg-mini"><div class="bar-fill-mini bar-satiety" id="satietyBar" style="width:100%"></div></div>

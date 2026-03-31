@@ -208,17 +208,21 @@ function applyDecay(withEvents = true) {
   const v = gs.cat.vitality, r = gs.cat.resistance, iq = gs.cat.intelligence;
   const [ms, mt, mc] = getMultiplier();
 
-  // 新版现有时统：1 tick 默认为 30 秒。现实一天 = 2880 ticks
-  // 目标需求：3天（约 8640 ticks）消耗约 90 点。因此基础消耗系数控制在 0.01 上下。
-  const baseSatiety = 0.010 + (v-1)*0.001; 
-  const baseThirst  = 0.012 + (v-1)*0.001;
-  const baseClean   = 0.008 + (v-1)*0.001;
+  // 平衡性重构：
+  // ⚡ 活泼度 (v)：Level 3 为基准，范围 -25% 到 +25% (步长 12.5%)。仅影响生存消耗压力。
+  // 🛡️ 抵抗力 (r)：Level 3 为基准，范围 -25% (脆弱) 到 +25% (强健) (步长 12.5%)。影响生存韧性。
+  // 🧠 智力 (iq)：-10%, 0%, 10%, 20%, 30%。影响成长速度。
+
+  const vFactor = 1 + (v - 3) * 0.125; 
+  const baseSatiety = 0.010 * vFactor; 
+  const baseThirst  = 0.012 * vFactor;
+  const baseClean   = 0.008;
 
   gs.satiety     = clamp(gs.satiety     - baseSatiety * ms);
   gs.thirst      = clamp(gs.thirst      - baseThirst * mt);
   gs.cleanliness = clamp(gs.cleanliness - baseClean * mc);
 
-  const rf = 1 - (r-1) * 0.05; // 抵抗力减免每级 5%
+  const rf = 1 - (r - 3) * 0.125; // 抵抗力每级增减 12.5% 健康损失
   let hd = 0;
   if (gs.satiety < 30)     hd -= 0.015 * rf;
   if (gs.thirst  < 20)     hd -= 0.020 * rf;
@@ -255,20 +259,21 @@ function applyDecay(withEvents = true) {
       const totalEarned = job ? job.wage : 3;
       gs.gold += totalEarned;
       gs.workTicksElapsed = 0;
-      gs.state = 'idle'; // 班次完成回归空闲
-      if (withEvents) addLog(`💰 ${gs.name} 勤奋地完成了「${job ? job.icon + job.name : '🛠️打零工'}」，获得报酬 ${totalEarned} 金币！`);
+      gs.state = 'idle';
+      if (withEvents) addLog(`💰 ${gs.name} 勤恳完成了「${job ? job.name : '打零工'}」，获得 ${totalEarned} 金币！`);
     }
   }
   // Study: increment skill progress
   if (gs.state === 'study' && gs.studyingCourseId) {
     const cid = gs.studyingCourseId;
-    gs.skillProgress[cid] = (gs.skillProgress[cid] || 0) + 1;
+    const iqBoost = 1 + (iq - 2) * 0.1; // 智力每级加速 10% 学习进度，Level 1 为 0.9x
+    gs.skillProgress[cid] = (gs.skillProgress[cid] || 0) + iqBoost;
     const course = COURSES.find(c => c.id === cid);
     if (course && gs.skillProgress[cid] >= course.learnTicks) {
       gs.learnedSkills[course.id] = true;
       gs.studyingCourseId = null;
-      gs.state = 'idle'; // 课程修完回归空闲
-      if (withEvents) addLog(`🎓 ${gs.name} 成功修完「${course.name}」！获得对应技能证书！`);
+      gs.state = 'idle'; 
+      if (withEvents) addLog(`🎓 ${gs.name} 成功修完「${course.name}」！(受智力加成)`);
     }
   }
   // Trip events
@@ -553,14 +558,14 @@ function calculateEarlyWorkPayout() {
   if (gs.state === 'work' && gs.workTicksElapsed > 0) {
     const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
     const totalWage = job ? job.wage : 3;
-    const progress = gs.workTicksElapsed / gs.workTargetTicks;
     
+    const progress = gs.workTicksElapsed / gs.workTargetTicks;
     const earned = Math.floor(progress * totalWage * 0.8);
     if (earned > 0) {
       gs.gold += earned;
-      addLog(`💼 ${gs.name} 结束了当前阶段，按进度的 80% 结算获得 ${earned} 金币。`);
+      addLog(`💼 ${gs.name} 提前结束工作，结算获得 ${earned} 金币。`);
     }
-    gs.workTicksElapsed = 0; // 重置进度
+    gs.workTicksElapsed = 0; 
   }
 }
 
@@ -782,21 +787,52 @@ function revivePet() {
 }
 
 // ---------- 职业说明 ----------
-function showSkillInfo() {
-  showModal('📚','职业系统说明',
-    `<div style="text-align:left;line-height:1.9;font-size:13px">
-      🎓 <b>学习阶段</b><br>
-      选择一门职业开始学习。挂机满对应的时间即可出师。<br>
-      <br>
-      💼 <b>打工阶段</b><br>
-      出师后，可以在打工时选择该职业上岗。<br>
-      保持打工状态，每隔一段时间就会自动结算一次工资，高阶职业赚得更多！<br>
-      <br>
-      📈 <b>晋级之路</b><br>
-      某些高级职业（如星级厨师、理财顾问）需要先学会基础职业才能解锁。
-    </div>`,
-    [{label:'明白了！', cls:'btn-primary', fn:closeModalDirect}]
-  );
+function showCatStats() {
+  const { vitality: v, resistance: r, intelligence: iq } = gs.cat;
+  
+  const vStatus = ((v - 3) * 12.5).toFixed(1);
+  const rStatus = ((r - 3) * 12.5).toFixed(1);
+  const iqStatus = ((iq - 2) * 10).toFixed(0);
+
+  const formatMod = (val) => {
+    val = parseFloat(val);
+    if (val > 0) return `<span style="color:#e74c3c;font-weight:700">+${val}%</span>`; // 消耗增加用红色警示
+    if (val < 0) return `<span style="color:#2ecc71;font-weight:700">${val}%</span>`; // 消耗降低用绿色
+    return `<span style="color:#95a5a6;font-weight:700">标准(100%)</span>`;
+  };
+  
+  const formatModPositiveGood = (val) => {
+    val = parseFloat(val);
+    if (val > 0) return `<span style="color:#2ecc71;font-weight:700">+${val}%</span>`;
+    if (val < 0) return `<span style="color:#e74c3c;font-weight:700">${val}%</span>`;
+    return `<span style="color:#95a5a6;font-weight:700">标准(100%)</span>`;
+  };
+
+  const html = `
+    <div class="stats-dashboard" style="text-align:left; padding:4px 0; width:100%; min-width:240px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #eee;">
+        <span style="font-size:13px;font-weight:700">⚡ 活泼度 (Lv.${v})</span>
+        <span style="font-size:12px;">代谢速率 ${formatMod(vStatus)}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #eee;">
+        <span style="font-size:13px;font-weight:700">🛡️ 抵抗力 (Lv.${r})</span>
+        <span style="font-size:12px;">健康韧性 ${formatModPositiveGood(rStatus)}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;">
+        <span style="font-size:13px;font-weight:700">🧠 智力 (Lv.${iq})</span>
+        <span style="font-size:12px;">学习效率 ${formatModPositiveGood(iqStatus)}</span>
+      </div>
+      <p style="font-size:11px; color:#636e72; margin-top:10px; line-height:1.6; background:#f9f9f9; padding:8px; border-radius:8px;">
+        💡 <b>详细养成指南：</b><br>
+        • <b>活泼</b>：决定饱食度、水分等生理属性的日常下降速度；<br>
+        • <b>抵抗</b>：决定遭遇饥饿、干渴或疲劳时的健康损耗程度；<br>
+        • <b>智力</b>：决定获取技能证书与领悟职业知识的挂机效率；<br>
+        • <b>贴士</b>：3星为猫咪的基础水平线，高星级能带来巨大优势。
+      </p>
+    </div>
+  `;
+
+  showModal('🐾', `${gs.name} 的天赋面板`, html, [{label:'了解了', cls:'btn-primary', fn:closeModalDirect}]);
 }
 
 // ---------- Modal ----------
@@ -855,8 +891,10 @@ function updateProfessionUI() {
     
     content.innerHTML = `
       <div class="study-progress-bar-wrap" style="margin:0; text-align:left;">
-        <div class="study-prog-label">${prof.icon} 正在「${prof.name}」打工…&nbsp;
-          <span>${pct}% · 剩 ${formatTime(remaining)}</span></div>
+        <div class="study-prog-label" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:6px;">
+          <span style="font-weight:800;">${prof.icon} 正在「${prof.name}」打工…</span>
+          <span style="font-size:11px; color:#636e72;">${pct}% · 剩 ${formatTime(remaining)}</span>
+        </div>
         <div class="study-prog-bg"><div class="study-prog-fill" style="width:${pct}%; background:linear-gradient(90deg, #6c5ce7, #a29bfe)"></div></div>
       </div>
     `;
@@ -870,10 +908,13 @@ function updateProfessionUI() {
     const prog = gs.skillProgress[course.id] || 0;
     const pct = Math.min(100, (prog / course.learnTicks) * 100).toFixed(1);
     const cat = COURSE_CATS[course.cat];
+    const iqBoost = 1 + (gs.cat.intelligence - 2) * 0.1;
     content.innerHTML = `
       <div class="study-progress-bar-wrap" style="margin:0; text-align:left;">
-        <div class="study-prog-label">${cat.icon} 正在研修「${course.name}」…&nbsp;
-          <span>已学 ${formatTime(prog)} / 需 ${formatTime(course.learnTicks)}</span></div>
+        <div class="study-prog-label" style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:6px;">
+          <span style="font-weight:800;">${cat.icon} 正在研修「${course.name}」…</span>
+          <span style="font-size:11px; color:#636e72;">${pct}% · 剩 ${formatTime(course.learnTicks - prog < 0 ? 0 : (course.learnTicks - prog) / iqBoost)}</span>
+        </div>
         <div class="study-prog-bg"><div class="study-prog-fill" style="width:${pct}%"></div></div>
       </div>
     `;
@@ -929,15 +970,6 @@ function openStudyModal() {
 function openWorkModal() {
   let html = `<div class="prof-grid">`;
   
-  // 始终显示零工
-  html += `
-    <div class="prof-card" onclick="selectJob(null)">
-      <div class="prof-icon">🛠️</div>
-      <div class="prof-name">打零工</div>
-      <div class="prof-desc">无门槛体力和脑力活，虽然辛苦但胜在灵活。</div>
-      <div class="prof-wage">报酬：3金 / 2h</div>
-    </div>`;
-
   // 显示满足条件的职业
   PROFESSIONS.forEach(p => {
     const skillsMet = p.reqSkills.every(s => gs.learnedSkills[s]);
@@ -953,6 +985,11 @@ function openWorkModal() {
   });
 
   html += `</div>`;
+
+  if (html === '<div class="prof-grid"></div>') {
+    html = `<div class="prof-empty">暂无符合条件的职业，去精进学业吧！</div>`;
+  }
+
 
   showModal('🛠️', '选择打工岗位', `
     <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
