@@ -863,12 +863,16 @@ function openStudyModal() {
     const reqMet   = p.req.every(r => gs.learnedProfessions[r]);
     const canStudy = !learned && reqMet;
     const reqNames = p.req.map(r => PROFESSIONS.find(pp => pp.id === r)?.name || r).join('、');
+    const prog = gs.studyProgress?.[p.id] || 0;
+    const pct = Math.min(100, (prog / p.learnTicks) * 100).toFixed(0);
+    const progressLabel = pct > 0 ? `<span style="color:#6c5ce7;font-weight:700">（已学 ${pct}%）</span>` : '';
+
     return `<div class="prof-card ${learned?' prof-learned':''} ${!reqMet&&!learned?' prof-locked':''}"
       onclick="${canStudy ? `selectStudyProfession('${p.id}')` : ''}">
       <div class="prof-icon">${p.icon}</div>
-      <div class="prof-name">${p.name}</div>
+      <div class="prof-name">${p.name}${progressLabel}</div>
       <div class="prof-desc">${learned?'✅ 已掌握': !reqMet?`🔒 需先学：${reqNames}`: `⏱ 需 ${formatTime(p.learnTicks)}`}</div>
-      <div class="prof-wage">打工收益：${p.wage}金</div>
+      <div class="prof-wage">打工收益预测：${p.wage}金</div>
     </div>`;
   }).join('') + `</div>`;
   showModal('📚', '安排重点学习', `
@@ -915,8 +919,33 @@ function requestState(target) {
     showToast('已经在舒适地休息啦~');
     return;
   }
+  
+  // --- 打工中断拦截提示 ---
+  if (gs.state === 'work' && gs.workTicksElapsed > 0 && target !== 'work') {
+    const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
+    const jobName = job ? job.name : '零工';
+    showModal('🏃', '确定要提前离岗吗？', 
+      `<div style="text-align:center;padding:10px">如果你现在离开「${jobName}」，之前的工作只能按 <b>80%</b> 结算薪水哦。</div>`,
+      [
+        { label: '确认离开并结算', cls:'btn-danger', fn: () => { closeModalDirect(); setState(target); } },
+        { label: '继续工作', fn: closeModalDirect }
+      ]
+    );
+    return;
+  }
+
   if (target === 'idle') { setState('idle'); return; }
-  if (target === 'study') { openStudyModal(); return; }
+  
+  // --- 学习：如果有正在学的课程，点击直接续学 ---
+  if (target === 'study') {
+    if (gs.studyingProfessionId && gs.state !== 'study') {
+      setState('study');
+    } else {
+      openStudyModal();
+    }
+    return;
+  }
+  
   if (target === 'work') { openWorkModal(); return; }
 }
 
@@ -934,7 +963,8 @@ function selectStudyProfession(id) {
   const isSwapping = (gs.state === 'study');
   gs.studyingProfessionId = id;
   if (typeof gs.studyProgress !== 'object') gs.studyProgress = {};
-  if (!gs.studyProgress[id]) gs.studyProgress[id] = 0;
+  // 核心修复：如果进度不存在才初始化，绝不重置已有进度
+  if (gs.studyProgress[id] === undefined) gs.studyProgress[id] = 0;
   
   if (isSwapping) {
     addLog(`🔄 ${gs.name} 转而钻研「${prof.icon}${prof.name}」啦！`);
