@@ -81,16 +81,22 @@ const TRIP_EVENTS = [
 ];
 
 const PROFESSIONS = [
-  // Tier 1 — 无前置要求
-  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'守卫家园，防止小偷入侵',       learnTicks:240,  wage:4,  req:[], tier:1 },
-  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'猫咪咖啡店，为客人端茶送水',   learnTicks:360,  wage:7,  req:[], tier:1 },
-  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'专业捕猎,守护粮仓不让鼠辈猖狂', learnTicks:540,  wage:11, req:[], tier:1 },
-  // Tier 2 — 需前置
-  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'湖边垂钓，以渔为生',           learnTicks:840,  wage:16, req:['hunter'],           tier:2 },
-  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'调查神秘案件，追踪可疑线索',   learnTicks:1350, wage:24, req:['barista'],          tier:2 },
-  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'猫咪星级餐厅掌厨料理大师',     learnTicks:1140, wage:20, req:['barista','hunter'], tier:2 },
-  // Tier 3 — 高级
-  { id:'accountant', icon:'📊', name:'理财顾问', desc:'帮猫咪们规划财富，稳健投资',   learnTicks:2250, wage:38, req:['detective','fisher'], tier:3 },
+  // Tier 1 — 初级职业 (2-4h)
+  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'守卫家园，防止小偷入侵',       learnTicks:240,  workTicks:480, wage:12, req:[], tier:1 },
+  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'猫咪咖啡店，为客人端茶送水',   learnTicks:360,  workTicks:240, wage:8,  req:[], tier:1 },
+  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'专业捕猎，守护粮仓',           learnTicks:540,  workTicks:240, wage:10, req:[], tier:1 },
+  { id:'rider',      icon:'🛵', name:'外卖骑士', desc:'风雨无阻，准时送达',           learnTicks:300,  workTicks:240, wage:9,  req:[], tier:1 },
+  { id:'mascot',     icon:'🎭', name:'猫咪吉祥物', desc:'商场门口卖萌，招揽生意',     learnTicks:300,  workTicks:480, wage:15, req:[], tier:1 },
+  
+  // Tier 2 — 中级职业 (4-6h)
+  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'湖边垂钓，以渔为生',           learnTicks:840,  workTicks:720, wage:28, req:['hunter'],           tier:2 },
+  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'调查神秘案件，追踪线索',       learnTicks:1350, workTicks:480, wage:24, req:['barista'],          tier:2 },
+  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'猫咪星级餐厅掌厨料理',         learnTicks:1140, workTicks:720, wage:35, req:['barista','hunter'], tier:2 },
+  { id:'editor',     icon:'📝', name:'脚本编辑', desc:'为猫片编写有趣的台词',         learnTicks:900,  workTicks:480, wage:22, req:['barista'],          tier:2 },
+  
+  // Tier 3 — 高级职业 (8h+)
+  { id:'accountant', icon:'📊', name:'理财顾问', desc:'帮猫咪们规划财富，稳健投资',   learnTicks:2250, workTicks:960, wage:60, req:['detective','fisher'], tier:3 },
+  { id:'manager',    icon:'🎩', name:'猫咖店长', desc:'统筹全局，经营梦幻咖啡馆',     learnTicks:2400, workTicks:960, wage:75, req:['chef','barista'],      tier:3 },
 ];
 
 // ---------- 全局状态 ----------
@@ -210,13 +216,11 @@ function applyDecay(withEvents = true) {
     gs.workTicksElapsed++;
     if (gs.workTicksElapsed >= gs.workTargetTicks) {
       const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
-      const baseWage = job ? job.wage : 3;
-      const multiplier = gs.workTargetTicks / 240; 
-      const totalEarned = Math.floor(baseWage * multiplier);
+      const totalEarned = job ? job.wage : 3;
       gs.gold += totalEarned;
       gs.workTicksElapsed = 0;
       gs.state = 'idle'; // 班次完成回归空闲
-      if (withEvents) addLog(`💰 ${gs.name} 勤奋地完成了【${job ? job.name : '零工'}】${multiplier * 2}小时班次，获得报酬 ${totalEarned} 金币！`);
+      if (withEvents) addLog(`💰 ${gs.name} 勤奋地完成了「${job ? job.icon + job.name : '🛠️打零工'}」，获得报酬 ${totalEarned} 金币！`);
     }
   }
   // Study: increment study progress for chosen profession
@@ -510,26 +514,28 @@ function switchScene(name) {
 }
 
 // ---------- 状态机 ----------
-function setState(newState) {
-  if (!gs) return;
-  if (gs.isDead) { addLog('⚠️ 宠物已离世，无法切换状态'); return; }
-  if (gs.state === newState) return;
-
-  // --- 打工提前退出结算 (打回 8 折) ---
+function calculateEarlyWorkPayout() {
   if (gs.state === 'work' && gs.workTicksElapsed > 0) {
     const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
-    const baseWage = job ? job.wage : 3;
-    const multiplier = gs.workTargetTicks / 240;
-    const totalWage = baseWage * multiplier;
+    const totalWage = job ? job.wage : 3;
     const progress = gs.workTicksElapsed / gs.workTargetTicks;
     
     const earned = Math.floor(progress * totalWage * 0.8);
     if (earned > 0) {
       gs.gold += earned;
-      addLog(`💼 ${gs.name} 提前结束了打工，按工时进度的 80% 结算，获得 ${earned} 金币。`);
+      addLog(`💼 ${gs.name} 结束了当前阶段，按进度的 80% 结算获得 ${earned} 金币。`);
     }
     gs.workTicksElapsed = 0; // 重置进度
   }
+}
+
+function setState(newState) {
+  if (!gs) return;
+  if (gs.isDead) { addLog('⚠️ 宠物已离世，无法切换状态'); return; }
+  if (gs.state === newState) return;
+
+  // --- 打工提前退出结算 ---
+  calculateEarlyWorkPayout();
 
   const labels = { idle:'空闲', work:'打工', study:'学习', trip:'出游' };
   gs.state = newState;
@@ -878,37 +884,27 @@ function openWorkModal() {
     html = `
       <div class="prof-empty">还没有掌握任何高级职业，先去做零工吧！</div>
       <div class="prof-grid">
-        <div class="prof-card">
+        <div class="prof-card" onclick="selectJob(null)">
           <div class="prof-icon">🛠️</div>
           <div class="prof-name">打零工</div>
           <div class="prof-desc">搬砖、洗盘子，只要出力气就能赚点小钱。</div>
-          <div class="prof-wage">基准：3金 / 2h</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:8px; width:100%">
-            <button class="btn btn-sm btn-primary" onclick="selectJob(null, 240)">2h</button>
-            <button class="btn btn-sm btn-primary" onclick="selectJob(null, 480)">4h</button>
-            <button class="btn btn-sm btn-primary" onclick="selectJob(null, 960)">8h</button>
-          </div>
+          <div class="prof-wage">报酬：3金 / 2h</div>
         </div>
       </div>
     `;
   } else {
     html += `<div class="prof-grid">${PROFESSIONS.map(p => {
       if (!gs.learnedProfessions[p.id]) return '';
-      return `<div class="prof-card">
+      return `<div class="prof-card" onclick="selectJob('${p.id}')">
         <div class="prof-icon">${p.icon}</div>
         <div class="prof-name">${p.name}</div>
         <div class="prof-desc">${p.desc}</div>
-        <div class="prof-wage">基准：${p.wage}金 / 2h</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-top:8px; width:100%">
-          <button class="btn btn-sm btn-primary" onclick="selectJob('${p.id}', 240)">2h</button>
-          <button class="btn btn-sm btn-primary" onclick="selectJob('${p.id}', 480)">4h</button>
-          <button class="btn btn-sm btn-primary" onclick="selectJob('${p.id}', 960)">8h</button>
-        </div>
+        <div class="prof-wage">报酬：${p.wage}金 / ${p.workTicks / 120}h</div>
       </div>`;
     }).join('')}</div>`;
   }
 
-  showModal('🛠️', '选择打工岗位及工时', `
+  showModal('🛠️', '选择打工岗位', `
     <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
     <div class="hide-scroll" style="text-align:left;max-height:400px;overflow-y:auto;padding-bottom:10px">${html}</div>`, 
     [{label:'稍后决定', fn:closeModalDirect}]);
@@ -951,23 +947,25 @@ function selectStudyProfession(id) {
   closeModalDirect();
 }
 
-function selectJob(id, durationTicks = 240) {
-  if (gs.state === 'work' && gs.currentJobId === id && gs.workTargetTicks === durationTicks) {
-    showToast('已经在进行同样的班次啦！');
+function selectJob(id) {
+  const prof = id ? PROFESSIONS.find(p => p.id === id) : { name:'零工', icon:'🛠️', workTicks: 240 };
+  
+  if (gs.state === 'work' && gs.currentJobId === id) {
+    showToast('已经在进行这份工作啦！');
     closeModalDirect();
     return;
   }
   
   const isSwapping = (gs.state === 'work');
-  // 如果是换岗，已经在 setState 触发了提前结算奖励逻辑，所以此处直接重置
+  if (isSwapping) calculateEarlyWorkPayout(); // 换岗先结算上一份
+  
+  // 从配置读取固定工时
   gs.currentJobId = id;
-  gs.workTargetTicks = durationTicks;
+  gs.workTargetTicks = prof.workTicks || 240;
   gs.workTicksElapsed = 0;
   
-  const prof = id ? PROFESSIONS.find(p => p.id === id) : { name:'零工', icon:'🛠️' };
-  
   if (isSwapping) {
-    addLog(`🔄 ${gs.name} 换到了「${prof.icon}${prof.name}」，工时 ${durationTicks/120}h！`);
+    addLog(`🔄 ${gs.name} 换到了「${prof.icon}${prof.name}」，此工作全勤需时 ${gs.workTargetTicks / 120}h！`);
     updateProfessionUI();
     updateUI();
     saveGame();
