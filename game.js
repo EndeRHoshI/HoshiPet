@@ -80,23 +80,45 @@ const TRIP_EVENTS = [
   { text:'被一条大狗吓到了，撒腿就跑！', mood:-10 },
 ];
 
+const COURSES = [
+  { id:'phys_1',  cat:'phys',  name:'体育初级', level:1, learnTicks:360, req:[] },
+  { id:'phys_2',  cat:'phys',  name:'体育中级', level:2, learnTicks:720, req:['phys_1'] },
+  { id:'culi_1',  cat:'culi',  name:'厨艺初级', level:1, learnTicks:320, req:[] },
+  { id:'culi_2',  cat:'culi',  name:'厨艺中级', level:2, learnTicks:640, req:['culi_1'] },
+  { id:'culi_3',  cat:'culi',  name:'厨艺高级', level:3, learnTicks:1200,req:['culi_2'] },
+  { id:'logic_1', cat:'logic', name:'逻辑初级', level:1, learnTicks:400, req:[] },
+  { id:'logic_2', cat:'logic', name:'逻辑中级', level:2, learnTicks:900, req:['logic_1'] },
+  { id:'art_1',   cat:'art',   name:'艺术初级', level:1, learnTicks:300, req:[] },
+  { id:'art_2',   cat:'art',   name:'艺术中级', level:2, learnTicks:600, req:['art_1'] },
+  { id:'math_1',  cat:'math',  name:'数学初级', level:1, learnTicks:400, req:[] },
+  { id:'math_2',  cat:'math',  name:'数学中级', level:2, learnTicks:900, req:['math_1'] },
+];
+
+const COURSE_CATS = {
+  phys:  { label: '体育 💪', icon: '⚽' },
+  culi:  { label: '厨艺 🍳', icon: '🍲' },
+  logic: { label: '逻辑 🧠', icon: '♟️' },
+  math:  { label: '数学 🔢', icon: '📐' },
+  art:   { label: '艺术 🎨', icon: '🖌️' },
+};
+
 const PROFESSIONS = [
-  // Tier 1 — 初级职业 (2-4h)
-  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'守卫家园，防止小偷入侵',       learnTicks:240,  workTicks:480, wage:12, req:[], tier:1 },
-  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'猫咪咖啡店，为客人端茶送水',   learnTicks:360,  workTicks:240, wage:8,  req:[], tier:1 },
-  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'专业捕猎，守护粮仓',           learnTicks:540,  workTicks:240, wage:10, req:[], tier:1 },
-  { id:'rider',      icon:'🛵', name:'外卖骑士', desc:'风雨无阻，准时送达',           learnTicks:300,  workTicks:240, wage:9,  req:[], tier:1 },
-  { id:'mascot',     icon:'🎭', name:'猫咪吉祥物', desc:'商场门口卖萌，招揽生意',     learnTicks:300,  workTicks:480, wage:15, req:[], tier:1 },
+  // Tier 1
+  { id:'rider',      icon:'🛵', name:'外卖骑士', desc:'无门槛，风雨无阻地奔波',   workTicks:240, wage:9,  reqSkills:[], tier:1 },
+  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'基础体能要求，守卫家园',     workTicks:480, wage:12, reqSkills:['phys_1'], tier:1 },
+  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'掌握厨艺，调制醇香咖啡',     workTicks:240, wage:8,  reqSkills:['culi_1'], tier:1 },
+  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'身体矫健，保卫粮仓',         workTicks:240, wage:10, reqSkills:['phys_1'], tier:1 },
+  { id:'mascot',     icon:'🎭', name:'猫咪吉祥物', desc:'体力与亲和力的双重挑战', workTicks:480, wage:15, reqSkills:['phys_1','art_1'], tier:1 },
   
-  // Tier 2 — 中级职业 (4-6h)
-  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'湖边垂钓，以渔为生',           learnTicks:840,  workTicks:720, wage:28, req:['hunter'],           tier:2 },
-  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'调查神秘案件，追踪线索',       learnTicks:1350, workTicks:480, wage:24, req:['barista'],          tier:2 },
-  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'猫咪星级餐厅掌厨料理',         learnTicks:1140, workTicks:720, wage:35, req:['barista','hunter'], tier:2 },
-  { id:'editor',     icon:'📝', name:'脚本编辑', desc:'为猫片编写有趣的台词',         learnTicks:900,  workTicks:480, wage:22, req:['barista'],          tier:2 },
+  // Tier 2
+  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'虽然也靠体力，但需要耐心',   workTicks:720, wage:28, reqSkills:['phys_1'], tier:2 },
+  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'智慧与身手的结合体',         workTicks:480, wage:26, reqSkills:['logic_1','phys_1'], tier:2 },
+  { id:'editor',     icon:'📝', name:'脚本编辑', desc:'逻辑与构思的创作职业',       workTicks:480, wage:22, reqSkills:['art_2'], tier:2 },
   
-  // Tier 3 — 高级职业 (8h+)
-  { id:'accountant', icon:'📊', name:'理财顾问', desc:'帮猫咪们规划财富，稳健投资',   learnTicks:2250, workTicks:960, wage:60, req:['detective','fisher'], tier:3 },
-  { id:'manager',    icon:'🎩', name:'猫咖店长', desc:'统筹全局，经营梦幻咖啡馆',     learnTicks:2400, workTicks:960, wage:75, req:['chef','barista'],      tier:3 },
+  // Tier 3
+  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'厨艺之巅，料理大师',         workTicks:720, wage:42, reqSkills:['culi_3'], tier:3 },
+  { id:'accountant', icon:'📊', name:'理财顾问', desc:'玩转数字与逻辑的猫',         workTicks:960, wage:70, reqSkills:['logic_2','math_2'], tier:3 },
+  { id:'manager',    icon:'🎩', name:'猫咖店长', desc:'全能精英，统筹经营',         workTicks:960, wage:80, reqSkills:['culi_2','art_2'], tier:3 },
 ];
 
 // ---------- 全局状态 ----------
@@ -124,9 +146,23 @@ function loadGame() {
     logs = data.logs || [];
     if (data.tickMs) tickMs = data.tickMs;
     if (data.isPaused !== undefined) isPaused = data.isPaused;
-    // 数据迁移
+    // 数据迁移与状态补全
     if (gs.workTargetTicks === undefined)  gs.workTargetTicks = 240;
     if (gs.workTicksElapsed === undefined) gs.workTicksElapsed = 0;
+    if (gs.learnedSkills === undefined)    gs.learnedSkills = {};
+    if (gs.skillProgress === undefined)    gs.skillProgress = {};
+    if (gs.studyingCourseId === undefined) gs.studyingCourseId = null;
+
+    // 职业证书补偿逻辑（如果老玩家学会了某职业，自动发放对应门槛的基础证书）
+    if (Object.keys(gs.learnedProfessions || {}).length > 0 && Object.keys(gs.learnedSkills).length === 0) {
+      PROFESSIONS.forEach(p => {
+        if (gs.learnedProfessions[p.id]) {
+          p.reqSkills.forEach(s => gs.learnedSkills[s] = true);
+        }
+      });
+      addLog('🔧 系统：检测到旧版本存档，已为你自动转换职业资格证。');
+    }
+
     return true;
   } catch(e) { return false; }
 }
@@ -223,17 +259,16 @@ function applyDecay(withEvents = true) {
       if (withEvents) addLog(`💰 ${gs.name} 勤奋地完成了「${job ? job.icon + job.name : '🛠️打零工'}」，获得报酬 ${totalEarned} 金币！`);
     }
   }
-  // Study: increment study progress for chosen profession
-  if (gs.state === 'study' && gs.studyingProfessionId) {
-    if (typeof gs.studyProgress !== 'object') gs.studyProgress = {}; // Migration safety
-    const pid = gs.studyingProfessionId;
-    gs.studyProgress[pid] = (gs.studyProgress[pid] || 0) + 1;
-    const prof = PROFESSIONS.find(p => p.id === pid);
-    if (prof && gs.studyProgress[pid] >= prof.learnTicks) {
-      gs.learnedProfessions[prof.id] = true;
-      gs.studyingProfessionId = null;
-      gs.state = 'idle'; // 学习完自动切换回空闲
-      if (withEvents) addLog(`🎓 ${gs.name} 学成了「${prof.icon}${prof.name}」！现在可以去打工了！`);
+  // Study: increment skill progress
+  if (gs.state === 'study' && gs.studyingCourseId) {
+    const cid = gs.studyingCourseId;
+    gs.skillProgress[cid] = (gs.skillProgress[cid] || 0) + 1;
+    const course = COURSES.find(c => c.id === cid);
+    if (course && gs.skillProgress[cid] >= course.learnTicks) {
+      gs.learnedSkills[course.id] = true;
+      gs.studyingCourseId = null;
+      gs.state = 'idle'; // 课程修完回归空闲
+      if (withEvents) addLog(`🎓 ${gs.name} 成功修完「${course.name}」！获得对应技能证书！`);
     }
   }
   // Trip events
@@ -351,7 +386,7 @@ function adoptCat() {
     ticks: 0, gold: 100, tripTicks: 0,
     satiety: 100, thirst: 100, cleanliness: 100, health: 100, mood: 100,
     state: 'idle', inventory: {}, isDead: false,
-    learnedProfessions: {}, studyingProfessionId: null, studyProgress: {}, currentJobId: null,
+    learnedSkills: {}, skillProgress: {}, studyingCourseId: null, currentJobId: null,
     workTargetTicks: 240, workTicksElapsed: 0,
   };
   logs = [];
@@ -826,18 +861,19 @@ function updateProfessionUI() {
       </div>
     `;
   } else if (gs.state === 'study') {
-    if (!gs.studyingProfessionId) {
+    if (!gs.studyingCourseId) {
       content.innerHTML = `<div style="font-size:13px;color:#e17055;padding:8px">⚠ 尚未安排系统课程</div>`;
       return;
     }
-    const prof = PROFESSIONS.find(p => p.id === gs.studyingProfessionId);
-    if (!prof) return;
-    const prog = gs.studyProgress?.[prof.id] || 0;
-    const pct = Math.min(100, (prog / prof.learnTicks) * 100).toFixed(1);
+    const course = COURSES.find(c => c.id === gs.studyingCourseId);
+    if (!course) return;
+    const prog = gs.skillProgress[course.id] || 0;
+    const pct = Math.min(100, (prog / course.learnTicks) * 100).toFixed(1);
+    const cat = COURSE_CATS[course.cat];
     content.innerHTML = `
       <div class="study-progress-bar-wrap" style="margin:0; text-align:left;">
-        <div class="study-prog-label">${prof.icon} 正在钻研「${prof.name}」…&nbsp;
-          <span>已学 ${formatTime(prog)} / 需 ${formatTime(prof.learnTicks)}</span></div>
+        <div class="study-prog-label">${cat.icon} 正在研修「${course.name}」…&nbsp;
+          <span>已学 ${formatTime(prog)} / 需 ${formatTime(course.learnTicks)}</span></div>
         <div class="study-prog-bg"><div class="study-prog-fill" style="width:${pct}%"></div></div>
       </div>
     `;
@@ -858,55 +894,65 @@ function showToast(msg) {
 }
 
 function openStudyModal() {
-  let html = `<div class="prof-grid">` + PROFESSIONS.map(p => {
-    const learned  = gs.learnedProfessions[p.id];
-    const reqMet   = p.req.every(r => gs.learnedProfessions[r]);
-    const canStudy = !learned && reqMet;
-    const reqNames = p.req.map(r => PROFESSIONS.find(pp => pp.id === r)?.name || r).join('、');
-    const prog = gs.studyProgress?.[p.id] || 0;
-    const pct = Math.min(100, (prog / p.learnTicks) * 100).toFixed(0);
-    const progressLabel = pct > 0 ? `<span style="color:#6c5ce7;font-weight:700">（已学 ${pct}%）</span>` : '';
+  let html = '';
+  Object.keys(COURSE_CATS).forEach(catKey => {
+    const cat = COURSE_CATS[catKey];
+    const catCourses = COURSES.filter(c => c.cat === catKey);
+    
+    html += `<div class="bag-category" style="margin:16px 0 8px">${cat.icon} ${cat.label}</div>`;
+    html += `<div class="prof-grid">`;
+    catCourses.forEach(c => {
+      const learned = gs.learnedSkills[c.id];
+      const reqMet = c.req.every(r => gs.learnedSkills[r]);
+      const canStudy = !learned && reqMet;
+      const prog = gs.skillProgress[c.id] || 0;
+      const pct = Math.min(100, (prog / c.learnTicks) * 100).toFixed(0);
+      const progressLabel = pct > 0 ? `<span style="color:#6c5ce7;font-weight:700">（已学 ${pct}%）</span>` : '';
 
-    return `<div class="prof-card ${learned?' prof-learned':''} ${!reqMet&&!learned?' prof-locked':''}"
-      onclick="${canStudy ? `selectStudyProfession('${p.id}')` : ''}">
-      <div class="prof-icon">${p.icon}</div>
-      <div class="prof-name">${p.name}${progressLabel}</div>
-      <div class="prof-desc">${learned?'✅ 已掌握': !reqMet?`🔒 需先学：${reqNames}`: `⏱ 需 ${formatTime(p.learnTicks)}`}</div>
-      <div class="prof-wage">打工收益预测：${p.wage}金</div>
-    </div>`;
-  }).join('') + `</div>`;
-  showModal('📚', '安排重点学习', `
+      html += `
+        <div class="prof-card ${learned?' prof-learned':''} ${!reqMet&&!learned?' prof-locked':''}"
+          onclick="${canStudy ? `selectCourse('${c.id}')` : ''}">
+          <div class="prof-icon">${cat.icon}</div>
+          <div class="prof-name">${c.name}${progressLabel}</div>
+          <div class="prof-desc">${learned?'✅ 已掌握': !reqMet?`🔒 需先修：${c.req.map(r=>COURSES.find(cc=>cc.id===r)?.name).join('、')}`: `⏱ 需学 ${formatTime(c.learnTicks)}`}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+
+  showModal('📚', '安排系统课程', `
     <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
-    <div class="hide-scroll" style="text-align:left;max-height:350px;overflow-y:auto;margin:-4px -2px">${html}</div>`, 
+    <div class="hide-scroll" style="text-align:left;max-height:400px;overflow-y:auto;padding-bottom:10px">${html}</div>`, 
     [{label:'稍后决定', fn:closeModalDirect}]);
 }
 
 function openWorkModal() {
-  const learnedCount = Object.keys(gs.learnedProfessions).filter(k => gs.learnedProfessions[k]).length;
-  let html = '';
-  if (learnedCount === 0) {
-    html = `
-      <div class="prof-empty">还没有掌握任何高级职业，先去做零工吧！</div>
-      <div class="prof-grid">
-        <div class="prof-card" onclick="selectJob(null)">
-          <div class="prof-icon">🛠️</div>
-          <div class="prof-name">打零工</div>
-          <div class="prof-desc">搬砖、洗盘子，只要出力气就能赚点小钱。</div>
-          <div class="prof-wage">报酬：3金 / 2h</div>
-        </div>
-      </div>
-    `;
-  } else {
-    html += `<div class="prof-grid">${PROFESSIONS.map(p => {
-      if (!gs.learnedProfessions[p.id]) return '';
-      return `<div class="prof-card" onclick="selectJob('${p.id}')">
-        <div class="prof-icon">${p.icon}</div>
-        <div class="prof-name">${p.name}</div>
-        <div class="prof-desc">${p.desc}</div>
-        <div class="prof-wage">报酬：${p.wage}金 / ${p.workTicks / 120}h</div>
-      </div>`;
-    }).join('')}</div>`;
-  }
+  let html = `<div class="prof-grid">`;
+  
+  // 始终显示零工
+  html += `
+    <div class="prof-card" onclick="selectJob(null)">
+      <div class="prof-icon">🛠️</div>
+      <div class="prof-name">打零工</div>
+      <div class="prof-desc">无门槛体力和脑力活，虽然辛苦但胜在灵活。</div>
+      <div class="prof-wage">报酬：3金 / 2h</div>
+    </div>`;
+
+  // 显示满足条件的职业
+  PROFESSIONS.forEach(p => {
+    const skillsMet = p.reqSkills.every(s => gs.learnedSkills[s]);
+    if (skillsMet) {
+      html += `
+        <div class="prof-card" onclick="selectJob('${p.id}')">
+          <div class="prof-icon">${p.icon}</div>
+          <div class="prof-name">${p.name}</div>
+          <div class="prof-desc">${p.desc}</div>
+          <div class="prof-wage">报酬：${p.wage}金 / ${p.workTicks / 120}h</div>
+        </div>`;
+    }
+  });
+
+  html += `</div>`;
 
   showModal('🛠️', '选择打工岗位', `
     <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
@@ -938,7 +984,7 @@ function requestState(target) {
   
   // --- 学习：如果有正在学的课程，点击直接续学 ---
   if (target === 'study') {
-    if (gs.studyingProfessionId && gs.state !== 'study') {
+    if (gs.studyingCourseId && gs.state !== 'study') {
       setState('study');
     } else {
       openStudyModal();
@@ -949,25 +995,24 @@ function requestState(target) {
   if (target === 'work') { openWorkModal(); return; }
 }
 
-function selectStudyProfession(id) {
-  if (gs.state === 'study' && gs.studyingProfessionId === id) {
+function selectCourse(id) {
+  if (gs.state === 'study' && gs.studyingCourseId === id) {
     showToast('已经在钻研这门课程啦！');
     closeModalDirect();
     return;
   }
-  const prof = PROFESSIONS.find(p => p.id === id);
-  if (!prof || gs.learnedProfessions[id]) return;
-  const reqMet = prof.req.every(r => gs.learnedProfessions[r]);
-  if (!reqMet) { addLog(`🔒 需要先学会：${prof.req.map(r=>PROFESSIONS.find(p=>p.id===r)?.name).join('、')}`); return; }
+  const course = COURSES.find(c => c.id === id);
+  if (!course || gs.learnedSkills[id]) return;
+  
+  const reqMet = course.req.every(r => gs.learnedSkills[r]);
+  if (!reqMet) { addLog(`🔒 需要先修完：${course.req.map(r=>COURSES.find(c=>c.id===r)?.name).join('、')}`); return; }
   
   const isSwapping = (gs.state === 'study');
-  gs.studyingProfessionId = id;
-  if (typeof gs.studyProgress !== 'object') gs.studyProgress = {};
-  // 核心修复：如果进度不存在才初始化，绝不重置已有进度
-  if (gs.studyProgress[id] === undefined) gs.studyProgress[id] = 0;
+  gs.studyingCourseId = id;
+  if (gs.skillProgress[id] === undefined) gs.skillProgress[id] = 0;
   
   if (isSwapping) {
-    addLog(`🔄 ${gs.name} 转而钻研「${prof.icon}${prof.name}」啦！`);
+    addLog(`🔄 ${gs.name} 转而钻研「${course.name}」啦！`);
     updateProfessionUI();
     updateUI();
     saveGame();
@@ -987,13 +1032,34 @@ function selectJob(id) {
   }
   
   const isSwapping = (gs.state === 'work');
-  if (isSwapping) calculateEarlyWorkPayout(); // 换岗先结算上一份
+  if (isSwapping && gs.workTicksElapsed > 0) {
+    const nextJob = id ? PROFESSIONS.find(p => p.id === id) : { name:'零工', icon:'🛠️' };
+    showModal('🔄', '确定要更换工作吗？', 
+      `<div style="text-align:center;padding:10px">当前工作尚未完成，更换到「${nextJob.name}」会导致之前的努力只能按 <b>80%</b> 结算薪水哦。</div>`,
+      [
+        { label: '确认换岗并结算', cls:'btn-danger', fn: () => { 
+            closeModalDirect(); 
+            calculateEarlyWorkPayout(); 
+            performSelectJob(id, nextJob); 
+          } 
+        },
+        { label: '继续当前工作', fn: closeModalDirect }
+      ]
+    );
+    return;
+  }
   
+  if (isSwapping) calculateEarlyWorkPayout(); 
+  performSelectJob(id, prof);
+}
+
+function performSelectJob(id, prof) {
   // 从配置读取固定工时
   gs.currentJobId = id;
   gs.workTargetTicks = prof.workTicks || 240;
   gs.workTicksElapsed = 0;
   
+  const isSwapping = (gs.state === 'work');
   if (isSwapping) {
     addLog(`🔄 ${gs.name} 换到了「${prof.icon}${prof.name}」，此工作全勤需时 ${gs.workTargetTicks / 120}h！`);
     updateProfessionUI();
@@ -1037,9 +1103,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if (loadGame()) {
     try {
       // Migrate old saves that don't have profession fields
-      if (!gs.learnedProfessions) gs.learnedProfessions = {};
-      if (gs.studyingProfessionId === undefined) gs.studyingProfessionId = null;
-      if (gs.studyProgress === undefined || typeof gs.studyProgress !== 'object') gs.studyProgress = {};
+    if (gs.learnedSkills === undefined)    gs.learnedSkills = {};
+    if (gs.skillProgress === undefined)    gs.skillProgress = {};
+    if (gs.studyingCourseId === undefined) gs.studyingCourseId = null;
       if (gs.currentJobId === undefined) gs.currentJobId = null;
       
       applyOfflineTicks();
