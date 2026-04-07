@@ -4,6 +4,7 @@
 
 // ---------- 常量数据 ----------
 const SAVE_KEY = 'hoshiPet_v1';
+const APP_VER  = '1.2.0';
 
 const CAT_POOL = [
   { emoji:'🐱', breed:'橘猫',    rarity:'common', traits:'热情活泼，超级贪吃' },
@@ -260,7 +261,7 @@ function applyDecay(withEvents = true) {
       gs.gold += totalEarned;
       gs.workTicksElapsed = 0;
       gs.state = 'idle';
-      if (withEvents) addLog(`💰 ${gs.name} 勤恳完成了「${job ? job.name : '打零工'}」，获得 ${totalEarned} 金币！`);
+      addLog(`💰 ${gs.name} 完成了一班「${job ? job.name : '打零工'}」，获得 ${totalEarned} 金币，已回到休息状态！`);
     }
   }
   // Study: increment skill progress
@@ -272,8 +273,8 @@ function applyDecay(withEvents = true) {
     if (course && gs.skillProgress[cid] >= course.learnTicks) {
       gs.learnedSkills[course.id] = true;
       gs.studyingCourseId = null;
-      gs.state = 'idle'; 
-      if (withEvents) addLog(`🎓 ${gs.name} 成功修完「${course.name}」！(受智力加成)`);
+      gs.state = 'idle';
+      addLog(`🎓 ${gs.name} 成功修完「${course.name}」，获得技能证书！已回到休息状态。`);
     }
   }
   // Trip events
@@ -507,7 +508,7 @@ function openBackpackModal() {
   const inner = getBagModalHTML();
   showModal('🎒','随身背包', `<div id="bagModalContent" style="text-align:left;max-height:300px;overflow-y:auto;margin:-4px -2px">${inner}</div>`,
     [
-      {label:'前往商城 🛒', cls:'btn-primary', fn:() => { switchScene('shop'); closeModalDirect(); }},
+      {label:'前往外出 🌟', cls:'btn-primary', fn:() => { switchScene('outing'); closeModalDirect(); }},
       {label:'关闭', fn:closeModalDirect}
     ]);
 }
@@ -543,12 +544,36 @@ function updateStateButtons() {
 }
 
 // ---------- 场景切换 ----------
-function switchScene(name) {
-  ['home','shop','system','trip'].forEach(s => {
-    document.getElementById('scene' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
-    document.getElementById('nav' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
+let _currentScene = 'home';
+
+function switchScene(name, pushHistory = true) {
+  // Nav tabs only for main scenes
+  const mainScenes = ['home', 'outing', 'system'];
+  // All scene ids (including sub-scenes like shop)
+  const allScenes = ['home', 'outing', 'system', 'shop'];
+  
+  allScenes.forEach(s => {
+    const sceneId = 'scene' + s.charAt(0).toUpperCase() + s.slice(1);
+    document.getElementById(sceneId)?.classList.toggle('active', s === name);
   });
-  document.body.className = `bg-${name}`;
+  // Update nav active state only for main scenes
+  mainScenes.forEach(s => {
+    const navId = 'nav' + s.charAt(0).toUpperCase() + s.slice(1);
+    // Shop has active outing tab highlighted
+    const isActive = s === name || (name === 'shop' && s === 'outing');
+    document.getElementById(navId)?.classList.toggle('active', isActive);
+  });
+
+  // Background class
+  const bgMap = { home:'bg-home', outing:'bg-outing', system:'bg-system', shop:'bg-shop' };
+  document.body.className = bgMap[name] || 'bg-outing';
+
+  // Push history state for back-gesture interception (only when not already navigating via popstate)
+  if (pushHistory && name !== _currentScene) {
+    history.pushState({ scene: name }, '', '#' + name);
+  }
+  _currentScene = name;
+
   renderInventory('inventoryList');
   renderInventory('inventoryListHome');
 }
@@ -846,15 +871,18 @@ function showModal(icon, title, text, actions) {
   // Wrap in lambda so MouseEvent is NOT passed to the fn (fixes cancel button bug)
   actions.forEach((a, i) => document.getElementById('modalBtn' + i).onclick = () => a.fn());
   document.getElementById('modalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
 
 function closeModal(e) {
   if (e && e.target !== document.getElementById('modalOverlay')) return;
   document.getElementById('modalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
 }
 
 function closeModalDirect() {
   document.getElementById('modalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
 }
 
 // ---------- Log ----------
@@ -921,6 +949,51 @@ function updateProfessionUI() {
   }
 }
 
+function requestState(target) {
+  if (gs.state === target && target === 'idle') {
+    showToast('已经在舒适地休息啦~');
+    return;
+  }
+  
+  // --- 打工中断拦截提示 ---
+  if (gs.state === 'work' && gs.workTicksElapsed > 0 && target !== 'work') {
+    const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
+    const jobName = job ? job.name : '零工';
+    showModal('🏃', '确定要提前离岗吗？', 
+      `<div style="text-align:center;padding:10px">如果你现在离开「${jobName}」，之前的工作只能按 <b>80%</b> 结算薪水哦。</div>`,
+      [
+        { label: '确认离开并结算', cls:'btn-danger', fn: () => { closeModalDirect(); setState(target); } },
+        { label: '继续工作', fn: closeModalDirect }
+      ]
+    );
+    return;
+  }
+
+  if (target === 'idle') { setState('idle'); return; }
+  
+  // --- 学习：如果有正在学的课程，点击直接续学 ---
+  if (target === 'study') {
+    if (gs.studyingCourseId && gs.state !== 'study') {
+      setState('study');
+    } else {
+      openStudyModal();
+    }
+    return;
+  }
+  
+  if (target === 'work') { openWorkModal(); return; }
+  
+  // --- 旅游：暂未开放 ---
+  if (target === 'trip') {
+    showModal('🌳', '出门旅游（即将开放）',
+      `<div style="text-align:center;padding:10px;color:#636e72">全新的出游系统正在开发中~<br><span style="font-size:12px">敬请期待！</span></div>`,
+      [{ label: '好哒', fn: closeModalDirect }]
+    );
+    return;
+  }
+}
+
+
 function showToast(msg) {
   const el = document.getElementById('petActionText');
   if (el) {
@@ -970,67 +1043,42 @@ function openStudyModal() {
 function openWorkModal() {
   let html = `<div class="prof-grid">`;
   
-  // 显示满足条件的职业
   PROFESSIONS.forEach(p => {
     const skillsMet = p.reqSkills.every(s => gs.learnedSkills[s]);
+    const isWorking = gs.state === 'work' && gs.currentJobId === p.id;
     if (skillsMet) {
       html += `
-        <div class="prof-card" onclick="selectJob('${p.id}')">
+        <div class="prof-card${isWorking ? ' prof-learned' : ''}" onclick="selectJob('${p.id}')">
+          <div class="prof-icon">${p.icon}</div>
+          <div class="prof-name">${p.name}${isWorking ? ' <span style="font-size:10px;color:#00b894">进行中</span>' : ''}</div>
+          <div class="prof-desc">${p.desc}</div>
+          <div class="prof-wage">报酬：${p.wage}金 / ${p.workTicks / 120}h</div>
+        </div>`;
+    } else {
+      // 显示未解锁职业，番灰并展示需求
+      const reqNames = p.reqSkills.map(s => {
+        const course = COURSES.find(c => c.id === s);
+        return course ? course.name : s;
+      }).join('、');
+      html += `
+        <div class="prof-card prof-locked">
           <div class="prof-icon">${p.icon}</div>
           <div class="prof-name">${p.name}</div>
           <div class="prof-desc">${p.desc}</div>
-          <div class="prof-wage">报酬：${p.wage}金 / ${p.workTicks / 120}h</div>
+          <div class="prof-wage" style="color:#aaa">🔒 需：${reqNames || '无门槛'}</div>
         </div>`;
     }
   });
 
   html += `</div>`;
 
-  if (html === '<div class="prof-grid"></div>') {
-    html = `<div class="prof-empty">暂无符合条件的职业，去精进学业吧！</div>`;
-  }
-
-
-  showModal('🛠️', '选择打工岗位', `
+  showModal('🏢', '猫才市场', `
     <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
     <div class="hide-scroll" style="text-align:left;max-height:400px;overflow-y:auto;padding-bottom:10px">${html}</div>`, 
     [{label:'稍后决定', fn:closeModalDirect}]);
 }
 
-function requestState(target) {
-  if (gs.state === target && target === 'idle') {
-    showToast('已经在舒适地休息啦~');
-    return;
-  }
-  
-  // --- 打工中断拦截提示 ---
-  if (gs.state === 'work' && gs.workTicksElapsed > 0 && target !== 'work') {
-    const job = PROFESSIONS.find(p => p.id === gs.currentJobId);
-    const jobName = job ? job.name : '零工';
-    showModal('🏃', '确定要提前离岗吗？', 
-      `<div style="text-align:center;padding:10px">如果你现在离开「${jobName}」，之前的工作只能按 <b>80%</b> 结算薪水哦。</div>`,
-      [
-        { label: '确认离开并结算', cls:'btn-danger', fn: () => { closeModalDirect(); setState(target); } },
-        { label: '继续工作', fn: closeModalDirect }
-      ]
-    );
-    return;
-  }
 
-  if (target === 'idle') { setState('idle'); return; }
-  
-  // --- 学习：如果有正在学的课程，点击直接续学 ---
-  if (target === 'study') {
-    if (gs.studyingCourseId && gs.state !== 'study') {
-      setState('study');
-    } else {
-      openStudyModal();
-    }
-    return;
-  }
-  
-  if (target === 'work') { openWorkModal(); return; }
-}
 
 function selectCourse(id) {
   if (gs.state === 'study' && gs.studyingCourseId === id) {
@@ -1173,6 +1221,53 @@ window.addEventListener('DOMContentLoaded', () => {
       applyOfflineTicks();
       updateUI();
     }
+  });
+
+  // 更新系统页面版本显示
+  const verEl = document.getElementById('appVersion');
+  if (verEl) verEl.textContent = '版本 ' + APP_VER;
+
+  // 拦截浏览器返回手势/按钮，转化为应用内部场景返回
+  let isExiting = false;
+  // 初始化：推入一个底部垫背状态，再推入真正的 home 状态
+  history.replaceState({ entry: true }, '', location.pathname);
+  history.pushState({ scene: 'home' }, '', '#home');
+
+  window.addEventListener('popstate', (e) => {
+    if (isExiting) return;
+
+    // 1. 如果 modal 开着，先关闭 modal，并抵消掉这次“返回”
+    const overlay = document.getElementById('modalOverlay');
+    if (overlay && overlay.classList.contains('show')) {
+      closeModalDirect();
+      // 因为打开 modal 并没有产生新的 history 栈，返回时实际消耗掉了一个场景栈
+      // 我们在此处强行推入当前场景的 state 来补偿，保持堆栈稳定
+      history.pushState({ scene: _currentScene }, '', '#' + _currentScene);
+      return;
+    }
+
+    // 2. 如果退到了边界（entry 垫背状态），拦截退出并提示
+    if (e.state && e.state.entry) {
+      showModal('👋', '要离开游戏吗？', '<div style="text-align:center;padding:10px">小主，你确定要退出 HoshiPet 吗？<br><span style="font-size:12px;color:#aaa">（您的游玩进度会自动保存）</span></div>', [
+        { label: '退出', cls: 'btn-danger', fn: () => {
+            closeModalDirect();
+            isExiting = true;
+            history.back(); // 真正退出页面
+          }
+        },
+        { label: '留下来', fn: () => {
+            closeModalDirect();
+            // 用户取消退出，重新补回 home 状态防线
+            history.pushState({ scene: 'home' }, '', '#home');
+          }
+        }
+      ]);
+      return;
+    }
+
+    // 3. 正常场景回退（根据 history 中的 state 恢复场景）
+    const targetScene = e.state?.scene || 'home';
+    switchScene(targetScene, false);
   });
 });
 
