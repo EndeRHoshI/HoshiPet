@@ -545,8 +545,23 @@ function updateStateButtons() {
 
 // ---------- 场景切换 ----------
 let _currentScene = 'home';
+let _historyInitialized = false;
+
+function initHistoryTrap() {
+  if (_historyInitialized) return;
+  _historyInitialized = true;
+  // 推入一个底部垫背状态，再推入当前的真实状态
+  history.replaceState({ entry: true }, '', location.pathname);
+  history.pushState({ scene: _currentScene }, '', '#' + _currentScene);
+}
+
+// 绑定到首次交互，确保浏览器（特别是 Safari）认可 pushState
+document.addEventListener('click', initHistoryTrap, { once: true, capture: true });
+document.addEventListener('touchstart', initHistoryTrap, { once: true, capture: true });
 
 function switchScene(name, pushHistory = true) {
+  initHistoryTrap(); // 确保在真正切换场景前，保底状态已初始化
+  
   // Nav tabs only for main scenes
   const mainScenes = ['home', 'outing', 'system'];
   // All scene ids (including sub-scenes like shop)
@@ -1229,9 +1244,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 拦截浏览器返回手势/按钮，转化为应用内部场景返回
   let isExiting = false;
-  // 初始化：推入一个底部垫背状态，再推入真正的 home 状态
-  history.replaceState({ entry: true }, '', location.pathname);
-  history.pushState({ scene: 'home' }, '', '#home');
+  // 注：初始的 history 垫背状态现在改由用户首次交互触发（见上方的 initHistoryTrap）
 
   window.addEventListener('popstate', (e) => {
     if (isExiting) return;
