@@ -154,15 +154,10 @@ function loadGame() {
     if (gs.skillProgress === undefined)    gs.skillProgress = {};
     if (gs.studyingCourseId === undefined) gs.studyingCourseId = null;
 
-    // 职业证书补偿逻辑（如果老玩家学会了某职业，自动发放对应门槛的基础证书）
-    if (Object.keys(gs.learnedProfessions || {}).length > 0 && Object.keys(gs.learnedSkills).length === 0) {
-      PROFESSIONS.forEach(p => {
-        if (gs.learnedProfessions[p.id]) {
-          p.reqSkills.forEach(s => gs.learnedSkills[s] = true);
-        }
-      });
-      addLog('🔧 系统：检测到旧版本存档，已为你自动转换职业资格证。');
-    }
+    if (gs.isUncomfortable === undefined)  gs.isUncomfortable = false;
+    if (gs.uncomfortableTicks === undefined) gs.uncomfortableTicks = 0;
+    if (gs.isWeakened === undefined)       gs.isWeakened = false;
+    if (gs.weakenedTicks === undefined)     gs.weakenedTicks = 0;
 
     return true;
   } catch(e) { return false; }
@@ -289,10 +284,36 @@ function applyDecay(withEvents = true) {
       if (withEvents) addLog(`🏠 ${gs.name} 不舒服了，自己跑回家~`);
     }
   }
-  // Death
-  if (gs.health <= 0 && !gs.isDead) {
-    gs.isDead = true; gs.state = 'idle';
-    if (withEvents) addLog(`💔 ${gs.name} 的健康归零，去了彩虹桥… 可在异次元复活`);
+  // Death / Uncomfortable / Weakened logic
+  const ticksPerDay = 86400 / (tickMs / 1000);
+
+  if (gs.health <= 0 && !gs.isDead && !gs.isUncomfortable) {
+    gs.isUncomfortable = true;
+    gs.uncomfortableTicks = 0;
+    addLog(`⚠️ ${gs.name} 感到身体非常不适，请立刻喂食/喂水！`);
+  }
+
+  if (gs.isUncomfortable) {
+    gs.uncomfortableTicks++;
+    if (gs.uncomfortableTicks >= ticksPerDay * 5) {
+      gs.isDead = true;
+      gs.isUncomfortable = false;
+      gs.state = 'idle';
+      addLog(`💔 ${gs.name} 因为长时间虚弱没能撑住，去了喵星…`);
+    } else if (gs.health > 20) {
+      gs.isUncomfortable = false;
+      gs.isWeakened = true;
+      gs.weakenedTicks = 0;
+      addLog(`🤕 ${gs.name} 虽然脱离了危险，但身体依然很虚弱，今日无法外出打工。`);
+    }
+  }
+
+  if (gs.isWeakened) {
+    gs.weakenedTicks++;
+    if (gs.weakenedTicks >= ticksPerDay) {
+      gs.isWeakened = false;
+      addLog(`✨ ${gs.name} 的身体完全康复，可以正常工作了！`);
+    }
   }
 }
 
@@ -318,6 +339,10 @@ function formatTime(ticks) {
   const hours = Math.floor(mins / 60);
   const remMins = mins % 60;
   return remMins > 0 ? `${hours}小时${remMins}分钟` : `${hours}小时`;
+}
+
+function getTicksPerDay() {
+  return 86400 / (tickMs / 1000);
 }
 
 // ---------- Tick ----------
@@ -394,6 +419,8 @@ function adoptCat() {
     state: 'idle', inventory: {}, isDead: false,
     learnedSkills: {}, skillProgress: {}, studyingCourseId: null, currentJobId: null,
     workTargetTicks: 240, workTicksElapsed: 0,
+    isUncomfortable: false, uncomfortableTicks: 0,
+    isWeakened: false, weakenedTicks: 0,
   };
   logs = [];
   addLog(`🎉 ${name} 来到了新家，它看起来很开心！`);
@@ -476,7 +503,12 @@ function updateUI() {
 
   // State badge
   const badges = { idle:'😴', work:'🛠️', study:'📚', trip:'🌳' };
-  setEl('stateBadge', el => el.textContent = gs.isDead ? '💀' : (badges[gs.state] || '😴'));
+  let currentBadge = badges[gs.state] || '😴';
+  if (gs.isDead) currentBadge = '💀';
+  else if (gs.isUncomfortable) currentBadge = '🥵';
+  else if (gs.isWeakened) currentBadge = '🤕';
+
+  setEl('stateBadge', el => el.textContent = currentBadge);
 
   updateProfessionUI();
   updateStateButtons();
@@ -529,6 +561,8 @@ function setBar(id, val) {
 
 function getMoodText() {
   if (gs.isDead)      return '💀 已经去了彩虹桥…';
+  if (gs.isUncomfortable) return '🥵 非常虚弱，急需照顾！';
+  if (gs.isWeakened)      return '🤕 身体虚弱，正在恢复中…';
   if (gs.health < 20) return '😿 生病了！需要看护~';
   if (gs.satiety < 20)return '😾 好饿好饿，快喂我！';
   if (gs.thirst < 20) return '😪 好渴，给水水！';
@@ -689,7 +723,8 @@ function useItem(id) {
   if (item.effect.revive) {
     if (!gs.isDead) { addLog('🐱 宠物好好的，不需要复活卡~'); return; }
     gs.isDead = false; gs.health = 50; gs.mood = 50;
-    addLog(`💌 ${gs.name} 被复活了！重新回到了你身边！`);
+    gs.isWeakened = true; gs.weakenedTicks = 0;
+    addLog(`💌 ${gs.name} 被复活了！重新回到了你身边，目前处于虚弱状态。`);
     gs.inventory[id]--;
     if (!gs.inventory[id]) delete gs.inventory[id];
     updateUI(); saveGame(); return;
@@ -995,8 +1030,14 @@ function requestState(target) {
     }
     return;
   }
-  
-  if (target === 'work') { openWorkModal(); return; }
+
+  if (target === 'work') {
+    if (gs.isWeakened) {
+      showModal('🤕', '猫咪太虚弱了', `<div style="text-align:center;padding:10px">${gs.name} 现在的状态还不能胜任工作，请休息至恢复正常状态。</div>`, [{ label: '好的', fn: closeModalDirect }]);
+      return;
+    }
+    openWorkModal(); return; 
+  }
   
   // --- 旅游：暂未开放 ---
   if (target === 'trip') {
