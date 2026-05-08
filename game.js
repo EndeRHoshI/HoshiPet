@@ -105,21 +105,21 @@ const COURSE_CATS = {
 
 const PROFESSIONS = [
   // Tier 1
-  { id:'rider',      icon:'🛵', name:'外卖骑士', desc:'无门槛，风雨无阻地奔波',   workTicks:240, wage:9,  reqSkills:[], tier:1 },
-  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'基础体能要求，守卫家园',     workTicks:480, wage:12, reqSkills:['phys_1'], tier:1 },
-  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'掌握厨艺，调制醇香咖啡',     workTicks:240, wage:8,  reqSkills:['culi_1'], tier:1 },
-  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'身体矫健，保卫粮仓',         workTicks:240, wage:10, reqSkills:['phys_1'], tier:1 },
-  { id:'mascot',     icon:'🎭', name:'猫咪吉祥物', desc:'体力与亲和力的双重挑战', workTicks:480, wage:15, reqSkills:['phys_1','art_1'], tier:1 },
+  { id:'rider',      icon:'🛵', name:'外卖骑士', desc:'无门槛，风雨无阻地奔波',   workTicks:240, wage:22, reqSkills:[], tier:1 },
+  { id:'guardian',   icon:'🛡️', name:'看门保安', desc:'基础体能要求，守卫家园',     workTicks:480, wage:48, reqSkills:['phys_1'], tier:1 },
+  { id:'barista',    icon:'☕',  name:'咖啡师',   desc:'掌握厨艺，调制醇香咖啡',     workTicks:240, wage:25, reqSkills:['culi_1'], tier:1 },
+  { id:'hunter',     icon:'🐭', name:'捕鼠猎手', desc:'身体矫健，保卫粮仓',         workTicks:240, wage:28, reqSkills:['phys_1'], tier:1 },
+  { id:'mascot',     icon:'🎭', name:'猫咪吉祥物', desc:'体力与亲和力的双重挑战', workTicks:480, wage:55, reqSkills:['phys_1','art_1'], tier:1 },
   
   // Tier 2
-  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'虽然也靠体力，但需要耐心',   workTicks:720, wage:28, reqSkills:['phys_1'], tier:2 },
-  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'智慧与身手的结合体',         workTicks:480, wage:26, reqSkills:['logic_1','phys_1'], tier:2 },
-  { id:'editor',     icon:'📝', name:'脚本编辑', desc:'逻辑与构思的创作职业',       workTicks:480, wage:22, reqSkills:['art_2'], tier:2 },
+  { id:'fisher',     icon:'🎣', name:'渔夫猫',   desc:'虽然也靠体力，但需要耐心',   workTicks:720, wage:120,reqSkills:['phys_1'], tier:2 },
+  { id:'detective',  icon:'🔍', name:'侦探猫',   desc:'智慧与身手的结合体',         workTicks:480, wage:90, reqSkills:['logic_1','phys_1'], tier:2 },
+  { id:'editor',     icon:'📝', name:'脚本编辑', desc:'逻辑与构思的创作职业',       workTicks:480, wage:95, reqSkills:['art_2'], tier:2 },
   
   // Tier 3
-  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'厨艺之巅，料理大师',         workTicks:720, wage:42, reqSkills:['culi_3'], tier:3 },
-  { id:'accountant', icon:'📊', name:'理财顾问', desc:'玩转数字与逻辑的猫',         workTicks:960, wage:70, reqSkills:['logic_2','math_2'], tier:3 },
-  { id:'manager',    icon:'🎩', name:'猫咖店长', desc:'全能精英，统筹经营',         workTicks:960, wage:80, reqSkills:['culi_2','art_2'], tier:3 },
+  { id:'chef',       icon:'🍳', name:'星级厨师', desc:'厨艺之巅，料理大师',         workTicks:720, wage:240,reqSkills:['culi_3'], tier:3 },
+  { id:'accountant', icon:'📊', name:'理财顾问', desc:'玩转数字与逻辑的猫',         workTicks:960, wage:420,reqSkills:['logic_2','math_2'], tier:3 },
+  { id:'manager',    icon:'🎩', name:'猫咖店长', desc:'全能精英，统筹经营',         workTicks:960, wage:480,reqSkills:['culi_2','art_2'], tier:3 },
 ];
 
 // ---------- 全局状态 ----------
