@@ -24,6 +24,8 @@ body {
 .scene { display:none; padding:16px 16px calc(var(--nav-h) + 20px); max-width:560px; margin:0 auto; }
 .scene.active { display:block; }
 
+
+
 /* Home two-column layout */
 #sceneHome { max-width:980px; }
 .home-layout { display:flex; gap:14px; align-items:flex-start; }
@@ -44,7 +46,7 @@ body {
 /* ── Scene backgrounds ── */
 body.bg-home   { background:url('assets/home_bg.png') center/cover fixed no-repeat; }
 body.bg-shop   { background:url('assets/shop_bg.png') center/cover fixed no-repeat; }
-body.bg-outing { background:linear-gradient(160deg,#e8f5e9 0%,#81c784 100%) fixed; }
+body.bg-outing { background:url('assets/outing_bg.png') center/cover fixed no-repeat; }
 body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixed; }
 .scene.active .card { backdrop-filter:blur(2px); background:rgba(255,255,255,0.93); }
 #sceneSystem.active .card { background:rgba(30,18,70,0.88); color:#e8d5ff; border:1px solid rgba(255,255,255,.1); }
@@ -61,6 +63,75 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
   border: 1px solid rgba(255, 107, 107, 0.15);
   box-shadow: 0 10px 30px rgba(107, 58, 42, 0.15);
 }
+#sceneShop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--nav-h);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px 16px 0;
+  z-index: 10;
+  max-width: 600px;
+  margin: 0 auto;
+}
+#sceneShop.active { display: flex; }
+
+
+
+
+
+/* ── Outing Scene Components ── */
+.checkin-banner {
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+  border-radius: 16px;
+  padding: 12px 18px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 15px rgba(108, 92, 231, 0.15);
+  transition: transform 0.2s, background 0.3s;
+}
+.checkin-banner:active { transform: scale(0.98); }
+.checkin-title { font-size: 16px; font-weight: 900; margin-bottom: 2px; }
+.checkin-desc  { font-size: 11px; opacity: 0.9; }
+.checkin-btn {
+  background: #fff;
+  color: #6c5ce7;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.checkin-banner.checked {
+  background: rgba(0,0,0,0.1) !important;
+  color: #777 !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  backdrop-filter: blur(4px);
+}
+.checkin-banner.checked .checkin-btn {
+  background: rgba(255,255,255,0.5) !important;
+  color: #999 !important;
+  cursor: default !important;
+}
+.locked-feature {
+  filter: grayscale(0.8);
+}
+.locked-feature .outing-card-icon,
+.locked-feature .outing-card-body {
+  opacity: 0.5;
+}
+.locked-feature:hover { transform: none !important; border-color: var(--border) !important; }
+
+
 #sceneShop .page-title {
   color: #5c3a21;
   text-shadow: 0 2px 8px rgba(255,255,255,0.9), 0 0 12px #fff;
@@ -104,10 +175,11 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 /* ── Outing hub ── */
 .outing-hub-grid { display:grid; grid-template-columns:1fr; gap:14px; margin-top:4px; }
 .outing-card {
-  background:rgba(255,255,255,0.85); border-radius:20px; padding:20px;
+  background:rgba(255,255,255,0.93); border-radius:20px; padding:20px;
   display:flex; align-items:center; gap:16px;
   cursor:pointer; transition:all 0.2s; border:2px solid transparent;
   box-shadow:0 4px 18px rgba(0,0,0,.07);
+  backdrop-filter: blur(2px);
 }
 .outing-card:hover { transform:translateY(-3px); border-color:var(--primary); box-shadow:0 8px 24px rgba(0,0,0,.12); }
 .outing-card:active { transform:scale(0.98); }
@@ -137,8 +209,16 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 
 /* ── Typography ── */
 .page-title { font-size:26px; font-weight:900; margin-bottom:3px; }
-.mood-line { font-size:12px; color:var(--text-lt); }
-.mood-line-wrap { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.mood-line { 
+  font-size: 10px; 
+  color: var(--text-lt); 
+  flex: 1; 
+  min-width: 0; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+.mood-line-wrap { display: flex; align-items: center; gap: 8px; margin-top: 6px; width: 100%; }
 .attr-view-btn {
   background: #fff8f0; border: 1.5px solid #fce4d6; border-radius: 20px;
   padding: 3px 10px; font-size: 11px; font-weight: 800; color: #e17055;
@@ -323,23 +403,87 @@ input[type="text"]:focus, input[type="password"]:focus { border-color:var(--prim
 .gold-banner .g-label  { font-size:11px; opacity:.85; }
 .gold-banner .g-amount { font-size:26px; font-weight:900; }
 
-.shop-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr)); gap:10px; }
-.shop-cat-title {
-  font-size:11px; font-weight:700; color:var(--text-lt);
-  text-transform:uppercase; letter-spacing:1px;
-  margin:14px 0 8px; padding-bottom:5px; border-bottom:1px solid var(--border);
+/* ── Meituan Style Shop ── */
+.shop-container {
+  display: flex;
+  flex: 1; /* 自动填充剩余高度 */
+  min-height: 0; /* 允许子元素滚动 */
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  margin-bottom: 0;
 }
-.shop-cat-title:first-child { margin-top:0; }
-.shop-item {
-  background:rgba(255,255,255,0.7); border:2px solid var(--border); border-radius:16px;
-  padding:14px 10px; text-align:center; cursor:pointer;
-  transition:transform .15s,border-color .15s,background .15s;
+.shop-sidebar {
+  width: 95px;
+  background: #fdfaf8;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
 }
-.shop-item:hover { transform:translateY(-3px); border-color:var(--primary); background:rgba(255,255,255,0.9); }
-.item-icon  { font-size:30px; display:block; margin-bottom:5px; }
-.item-name  { font-size:12px; font-weight:700; }
-.item-desc  { font-size:10px; color:var(--text-lt); margin:2px 0 7px; }
-.item-price { font-size:12px; font-weight:900; color:#e67e22; }
+.shop-sidebar::-webkit-scrollbar { display: none; }
+.shop-cat-nav {
+  padding: 18px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8d766e;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 4px solid transparent;
+}
+.shop-cat-nav.active {
+  background: #fff;
+  color: var(--primary);
+  border-left-color: var(--primary);
+  font-weight: 900;
+}
+.shop-content {
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  padding: 14px 14px 300px;
+  scroll-behavior: smooth;
+  background: #fff;
+  overscroll-behavior: contain;
+}
+
+.shop-content-section {
+  margin-bottom: 30px;
+}
+.shop-section-title {
+  font-size: 12px;
+  font-weight: 900;
+  color: #6b3a2a;
+  margin-bottom: 14px;
+  padding-left: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.shop-item-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.shop-item-horizontal {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: #fffaf8;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #fce4d6;
+}
+.shop-item-horizontal:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(107, 58, 42, 0.08); background: #fff; }
+.shop-item-horizontal .item-icon { font-size: 34px; flex-shrink: 0; }
+.shop-item-horizontal .item-info { flex: 1; }
+.shop-item-horizontal .item-name { font-size: 14px; font-weight: 800; color: #4b2c20; margin-bottom: 3px; }
+.shop-item-horizontal .item-desc { font-size: 10px; color: #a08a80; line-height: 1.4; }
+.shop-item-horizontal .item-price { font-size: 13px; font-weight: 900; color: #e17055; margin-left: 10px; }
+
 
 .inv-item {
   display:flex; align-items:center; gap:10px;
@@ -535,12 +679,9 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
       <span class="g-icon">🪙</span>
       <div><div class="g-label">我的金币</div><div class="g-amount" id="shopGoldVal">0</div></div>
     </div>
-    <div class="card" style="padding-top:22px;">
-      <div id="shopGrid"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">🎒 当前背包</div>
-      <div id="inventoryList"><div class="inv-empty">背包空空如也~</div></div>
+    <div class="shop-container">
+      <div class="shop-sidebar" id="shopSidebar"></div>
+      <div class="shop-content" id="shopContent"></div>
     </div>
   </div><!-- /sceneShop -->
 
@@ -608,6 +749,15 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
   <div class="scene" id="sceneOuting">
     <div class="page-title">🌟 外出</div>
     <div class="page-sub">带着猫咪探索外面的世界</div>
+
+    <div class="checkin-banner" id="checkInBanner" onclick="dailyCheckIn()">
+      <div class="checkin-info">
+        <div class="checkin-title">📅 每日签到</div>
+        <div class="checkin-desc" id="checkInStatus">点击领取今日 50 金币奖励！</div>
+      </div>
+      <button class="checkin-btn" id="checkInBtn">签到</button>
+    </div>
+
     <div class="outing-hub-grid">
       <div class="outing-card" onclick="requestState('work')">
         <div class="outing-card-icon">🏢</div>
@@ -632,6 +782,14 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
           <div class="outing-card-desc">购买食物、饮料、清洁用品等。<br>让猫咪生活得更幸福！</div>
         </div>
         <span style="font-size:20px; color:var(--text-lt);">›</span>
+      </div>
+      <div class="outing-card locked-feature" onclick="showScratchInfo()">
+        <div class="outing-card-icon">🎰</div>
+        <div class="outing-card-body">
+          <div class="outing-card-title">刮刮乐中心</div>
+          <div class="outing-card-desc">试试手气，赢取超级大奖！<br>（即将开放，敬请期待）</div>
+        </div>
+        <span style="font-size:20px; color:var(--text-lt); opacity:0.5">🔒</span>
       </div>
     </div>
   </div><!-- /sceneOuting -->

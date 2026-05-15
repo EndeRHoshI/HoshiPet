@@ -67,6 +67,7 @@ const ITEMS = [
   { id:'laser',    cat:'fun',     icon:'🛸', name:'全息猫爬架',    desc:'心情+100 健康+20 饱食-20 水分-20',   price:75,  effect:{ mood:100, health:20, satiety:-20, thirst:-20 } },
   // 特殊道具
   { id:'rename',   cat:'special', icon:'📛', name:'改名卡',        desc:'可以重新命名猫咪',                   price:30,  effect:{ rename:true } },
+  { id:'recovery_med', cat:'special', icon:'🧪', name:'特效恢复药', desc:'解除濒死与虚弱状态，健康+30', price:50,  effect:{ recover:true, health:30 } },
   { id:'revive',   cat:'special', icon:'💌', name:'复活卡',        desc:'复活失去的好朋友',                   price:100, effect:{ revive:true } },
 ];
 
@@ -158,6 +159,7 @@ function loadGame() {
     if (gs.uncomfortableTicks === undefined) gs.uncomfortableTicks = 0;
     if (gs.isWeakened === undefined)       gs.isWeakened = false;
     if (gs.weakenedTicks === undefined)     gs.weakenedTicks = 0;
+    if (gs.lastCheckInDate === undefined)   gs.lastCheckInDate = '';
 
     return true;
   } catch(e) { return false; }
@@ -594,10 +596,17 @@ document.addEventListener('click', initHistoryTrap, { once: true, capture: true 
 document.addEventListener('touchstart', initHistoryTrap, { once: true, capture: true });
 
 function switchScene(name, pushHistory = true) {
-  initHistoryTrap(); // 确保在真正切换场景前，保底状态已初始化
+  initHistoryTrap(); 
   
+  // 独立商城页逻辑：进入商城隐藏底部 Tab，退出则显示
+  const navBar = document.getElementById('navBar');
+  if (navBar) {
+    navBar.style.display = (name === 'shop') ? 'none' : 'flex';
+  }
+
   // Nav tabs only for main scenes
   const mainScenes = ['home', 'outing', 'system'];
+
   // All scene ids (including sub-scenes like shop)
   const allScenes = ['home', 'outing', 'system', 'shop'];
   
@@ -605,6 +614,8 @@ function switchScene(name, pushHistory = true) {
     const sceneId = 'scene' + s.charAt(0).toUpperCase() + s.slice(1);
     document.getElementById(sceneId)?.classList.toggle('active', s === name);
   });
+  
+  if (name === 'outing') updateCheckInUI();
   // Update nav active state only for main scenes
   mainScenes.forEach(s => {
     const navId = 'nav' + s.charAt(0).toUpperCase() + s.slice(1);
@@ -661,41 +672,73 @@ function setState(newState) {
 }
 
 // ---------- 商城 ----------
+// ---------- 商城 ----------
 function renderShopGrid() {
-  const container = document.getElementById('shopGrid');
+  const sidebar = document.getElementById('shopSidebar');
+  const content = document.getElementById('shopContent');
+  if (!sidebar || !content) return;
+
   const catOrder = ['food','drink','hygiene','health','fun','special'];
-  container.innerHTML = catOrder.map(catKey => {
+  
+  // Render Sidebar
+  sidebar.innerHTML = catOrder.map((catKey, index) => {
+    const { label } = ITEM_CATEGORIES[catKey];
+    // 只取 Emoji 后的文字作为侧边栏标签
+    const shortLabel = label.split(' ')[1] || label;
+    return `<div class="shop-cat-nav ${index === 0 ? 'active' : ''}" id="nav-${catKey}" onclick="scrollToShopCat('${catKey}')">${shortLabel}</div>`;
+  }).join('');
+
+  // Render Content
+  content.innerHTML = catOrder.map(catKey => {
     const catItems = ITEMS.filter(i => i.cat === catKey);
     if (!catItems.length) return '';
     const { label } = ITEM_CATEGORIES[catKey];
-    const grid = catItems.map(item => `
-      <div class="shop-item" onclick="buyItem('${item.id}')">
+    
+    const itemsHtml = catItems.map(item => `
+      <div class="shop-item-horizontal" onclick="buyItem('${item.id}')">
         <span class="item-icon">${item.icon}</span>
-        <div class="item-name">${item.name}</div>
-        <div class="item-desc">${item.desc}</div>
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">${item.desc.replace(/ /g, '<br>')}</div>
+        </div>
         <div class="item-price">🪙 ${item.price}</div>
       </div>`).join('');
-    
-    // 使用 style="display:flex..." 实现折叠标题，默认收起
+
     return `
-      <div class="shop-cat-title" onclick="toggleShopCat('${catKey}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-        <span>${label}</span>
-        <span id="shop-icon-${catKey}" style="font-size:10px; color:#aaa; transition:transform 0.2s; transform:rotate(-90deg);">▼</span>
+      <div class="shop-content-section" id="section-${catKey}">
+        <div class="shop-section-title">${label}</div>
+        <div class="shop-item-list">${itemsHtml}</div>
       </div>
-      <div class="shop-grid" id="shop-grid-${catKey}" style="transition:all 0.2s; display:none;">${grid}</div>
     `;
   }).join('');
+
+  // 监听滚动，自动切换左侧激活态
+  content.onscroll = () => {
+    let current = catOrder[0];
+    for (let catKey of catOrder) {
+      const section = document.getElementById(`section-${catKey}`);
+      // 由于 shopContent 是 position:relative，所以 section.offsetTop 是相对于它的
+      if (section && content.scrollTop >= section.offsetTop - 20) {
+        current = catKey;
+      }
+    }
+    // 检查是否滚动到底部
+    if (content.scrollTop + content.clientHeight >= content.scrollHeight - 50) {
+      current = catOrder[catOrder.length - 1];
+    }
+    
+    document.querySelectorAll('.shop-cat-nav').forEach(el => el.classList.remove('active'));
+    const activeNav = document.getElementById(`nav-${current}`);
+    if (activeNav) activeNav.classList.add('active');
+  };
 }
 
-function toggleShopCat(catKey) {
-  const grid = document.getElementById(`shop-grid-${catKey}`);
-  const icon = document.getElementById(`shop-icon-${catKey}`);
-  if (grid.style.display === 'none') {
-    grid.style.display = 'grid';
-    icon.style.transform = 'rotate(0deg)';
-  } else {
-    grid.style.display = 'none';
-    icon.style.transform = 'rotate(-90deg)';
+function scrollToShopCat(catKey) {
+  const section = document.getElementById(`section-${catKey}`);
+  const content = document.getElementById('shopContent');
+  if (section && content) {
+    // 平滑滚动到指定偏移量
+    content.scrollTo({ top: section.offsetTop, behavior: 'smooth' });
   }
 }
 
@@ -725,6 +768,18 @@ function useItem(id) {
     gs.isDead = false; gs.health = 50; gs.mood = 50;
     gs.isWeakened = true; gs.weakenedTicks = 0;
     addLog(`💌 ${gs.name} 被复活了！重新回到了你身边，目前处于虚弱状态。`);
+    gs.inventory[id]--;
+    if (!gs.inventory[id]) delete gs.inventory[id];
+    updateUI(); saveGame(); return;
+  }
+  if (item.effect.recover) {
+    if (!gs.isUncomfortable && !gs.isWeakened) {
+      addLog(`🐱 ${gs.name} 目前很健康，不需要使用特效恢复药~`); return;
+    }
+    gs.isUncomfortable = false;
+    gs.isWeakened = false;
+    gs.health = clamp(gs.health + (item.effect.health || 0), 100);
+    addLog(`✨ 使用了「${item.icon}${item.name}」，${gs.name} 瞬间恢复了精神！`);
     gs.inventory[id]--;
     if (!gs.inventory[id]) delete gs.inventory[id];
     updateUI(); saveGame(); return;
@@ -1055,6 +1110,28 @@ function requestState(target) {
 }
 
 
+function showSkillInfo() {
+  let html = `<div style="text-align:left;font-size:12px;line-height:1.6;color:#636e72">`;
+  html += `<p>只有获得对应的<b>技能证书</b>，猫咪才能入岗高薪职业。可以在“学习”中修读课程。</p><hr style="margin:10px 0;opacity:0.2">`;
+  
+  [1, 2, 3].forEach(tier => {
+    html += `<div style="font-weight:900;color:var(--text);margin-top:10px">Tier ${tier} 职业</div>`;
+    const tierProfs = PROFESSIONS.filter(p => p.tier === tier);
+    tierProfs.forEach(p => {
+      const reqs = p.reqSkills.length > 0 
+        ? p.reqSkills.map(sid => COURSES.find(c => c.id === sid)?.name || sid).join(' + ')
+        : '无门槛';
+      html += `<div style="margin:4px 0;display:flex;justify-content:space-between">
+        <span>${p.icon} ${p.name}</span>
+        <span style="color:#e17055">需：${reqs}</span>
+      </div>`;
+    });
+  });
+  html += `</div>`;
+  
+  showModal('❓', '职业入岗说明', html, [{label:'知道了', fn:closeModalDirect}]);
+}
+
 function showToast(msg) {
   const el = document.getElementById('petActionText');
   if (el) {
@@ -1067,6 +1144,47 @@ function showToast(msg) {
     }, 2000);
   }
 }
+
+// ---------- 签到 & 刮刮乐 ----------
+function dailyCheckIn() {
+  const today = new Date().toLocaleDateString();
+  if (gs.lastCheckInDate === today) {
+    showToast('今天已经签到过啦，明天再来吧~');
+    return;
+  }
+  
+  gs.gold += 50;
+  gs.lastCheckInDate = today;
+  addLog(`📅 签到成功！领取了今日的 50 金币奖励。`);
+  updateUI();
+  updateCheckInUI();
+  saveGame();
+  
+  showModal('📅', '签到成功', `<div style="text-align:center;padding:10px">恭喜！你领取了今日签到奖励：<br><b style="font-size:24px;color:#e17055;display:block;margin:10px 0">🪙 50 金币</b></div>`, [{label:'太棒了', fn:closeModalDirect}]);
+}
+
+function updateCheckInUI() {
+  const today = new Date().toLocaleDateString();
+  const banner = document.getElementById('checkInBanner');
+  const status = document.getElementById('checkInStatus');
+  const btn = document.getElementById('checkInBtn');
+  if (!banner || !status || !btn) return;
+  
+  if (gs.lastCheckInDate === today) {
+    banner.classList.add('checked');
+    status.textContent = '今日已签到，明天再来哦~';
+    btn.textContent = '已签到';
+  } else {
+    banner.classList.remove('checked');
+    status.textContent = '点击领取今日 50 金币奖励！';
+    btn.textContent = '签到';
+  }
+}
+
+function showScratchInfo() {
+  showModal('🎰', '刮刮乐中心', `<div style="text-align:center;padding:15px;color:#636e72">全新的“幸运刮刮乐”系统正在装修中...<br><br><span style="font-size:13px">在这里你可以用极少的金币博取超级大奖！<br>敬请期待！</span></div>`, [{label:'好哒', fn:closeModalDirect}]);
+}
+
 
 function openStudyModal() {
   let html = '';
