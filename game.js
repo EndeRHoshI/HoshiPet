@@ -310,7 +310,7 @@ function applyDecay(withEvents = true) {
 
   if (gs.isWeakened) {
     gs.weakenedTicks++;
-    if (gs.weakenedTicks >= ticksPerDay) {
+    if (gs.weakenedTicks >= ticksPerDay / 4) { // 6 小时恢复 (24/4=6)
       gs.isWeakened = false;
       addLog(`✨ ${gs.name} 的身体完全康复，可以正常工作了！`);
     }
@@ -540,7 +540,7 @@ function openBackpackModal() {
   const inner = getBagModalHTML();
   showModal('🎒','随身背包', `<div id="bagModalContent" style="text-align:left;max-height:300px;overflow-y:auto;margin:-4px -2px">${inner}</div>`,
     [
-      {label:'前往外出 🌟', cls:'btn-primary', fn:() => { switchScene('outing'); closeModalDirect(); }},
+      {label:'前往商城 🛒', cls:'btn-primary', fn:() => { switchScene('shop'); closeModalDirect(); }},
       {label:'关闭', fn:closeModalDirect}
     ]);
 }
@@ -1032,8 +1032,13 @@ function requestState(target) {
   }
 
   if (target === 'work') {
-    if (gs.isWeakened) {
-      showModal('🤕', '猫咪太虚弱了', `<div style="text-align:center;padding:10px">${gs.name} 现在的状态还不能胜任工作，请休息至恢复正常状态。</div>`, [{ label: '好的', fn: closeModalDirect }]);
+    if (gs.isWeakened || gs.isUncomfortable || gs.health < 20) {
+      let statusIcon = '🤕';
+      let statusTitle = '猫咪状态不佳';
+      if (gs.isUncomfortable) { statusIcon = '🥵'; statusTitle = '急需照顾'; }
+      else if (gs.health < 20) { statusIcon = '😿'; statusTitle = '需要看护'; }
+      
+      showModal(statusIcon, statusTitle, `<div style="text-align:center;padding:10px">${gs.name} 现在的身体状态还不能胜任工作，请先通过喂食或休息让它恢复。</div>`, [{ label: '好的', fn: closeModalDirect }]);
       return;
     }
     openWorkModal(); return; 
