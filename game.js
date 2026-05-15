@@ -1422,7 +1422,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (overlay && overlay.classList.contains('show')) {
       closeModalDirect();
       // 因为打开 modal 并没有产生新的 history 栈，返回时实际消耗掉了一个场景栈
-      // 我们在此处强行推入当前场景的 state 来补偿，保持堆栈稳定
       history.pushState({ scene: _currentScene }, '', '#' + _currentScene);
       return;
     }
@@ -1506,13 +1505,15 @@ let scratchEngine = {
     this.resultCanvas = document.getElementById('scratchResultCanvas');
     this.resultCtx = this.resultCanvas.getContext('2d');
     
+    // 恢复：更新 HTML 标题
+    document.getElementById('scratchCardTitle').innerText = SCRATCH_CONFIG[mode].name;
+
     this.isRevealed = false;
     this.isDrawing = false;
     this.outcome = this.generateOutcome(mode);
     
-    // 动态设置画布尺寸（高分辨率）
     const rect = this.canvas.parentElement.getBoundingClientRect();
-    const dpr = 2; // Fixed high DPI
+    const dpr = 2;
     
     [this.canvas, this.resultCanvas].forEach(canv => {
       canv.width = rect.width * dpr;
@@ -1525,11 +1526,13 @@ let scratchEngine = {
     this.renderResultLayer();
     this.drawCoverLayer();
     this.bindEvents();
+
+    const footer = document.querySelector('.scratch-game-footer');
+    footer.innerHTML = `<button class="btn btn-scratch-back" onclick="backToScratchLobby()">放弃这张</button>`;
   },
 
   destroy() {
     if (!this.canvas) return;
-    // 重置画布内容并克隆节点以清除事件监听
     const newScratch = this.canvas.cloneNode(true);
     const newResult = this.resultCanvas.cloneNode(true);
     this.canvas.parentNode.replaceChild(newScratch, this.canvas);
@@ -1615,10 +1618,8 @@ let scratchEngine = {
     const ctx = this.resultCtx;
     const w = this.resultCanvas.width / 2;
     const h = this.resultCanvas.height / 2;
-    
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, w, h);
-
     const colors = { 1:'#fff9f0', 2:'#f0f7ff', 3:'#fff0f0', 4:'#f5f0ff', 5:'#f0fff4' };
     ctx.fillStyle = colors[this.mode];
     ctx.fillRect(0, 0, w, h);
@@ -1699,25 +1700,41 @@ let scratchEngine = {
     const ctx = this.ctx;
     const w = this.canvas.width / 2;
     const h = this.canvas.height / 2;
-    
     ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0, 0, w, h);
     
-    // 主涂层颜色
-    ctx.fillStyle = "#dfe4ea";
-    ctx.fillRect(0, 0, w, h);
-    
-    // 绘制一些装饰性的斜纹或点阵
-    ctx.strokeStyle = "#ced6e0";
-    ctx.lineWidth = 1;
-    for(let i=-w; i<w+h; i+=15) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i+h, h); ctx.stroke();
+    if (this.mode === 1) {
+      const cw = 200, ch = 100;
+      const cx = (w - cw) / 2, cy = (h - ch) / 2; 
+      ctx.save();
+      ctx.fillStyle = "#dfe4ea";
+      if (ctx.roundRect) ctx.roundRect(cx, cy, cw, ch, 15); else ctx.fillRect(cx, cy, cw, ch);
+      ctx.fill();
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(cx, cy, cw, ch, 15); else ctx.rect(cx, cy, cw, ch);
+      ctx.clip();
+      ctx.strokeStyle = "#ced6e0"; ctx.lineWidth = 1;
+      for(let i = cx - ch; i < cx + cw; i += 15) {
+        ctx.beginPath(); ctx.moveTo(i, cy); ctx.lineTo(i + ch, cy + ch); ctx.stroke();
+      }
+      ctx.restore();
+      ctx.fillStyle = "#57606f"; ctx.font = "bold 14px Nunito";
+      ctx.textAlign = "center";
+      ctx.fillText("SCRATCH", w/2, h/2 + 5);
+      return;
     }
 
-    // 绘制中间的 Logo 区域
+    ctx.fillStyle = "#dfe4ea";
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    ctx.strokeStyle = "#ced6e0"; ctx.lineWidth = 1;
+    for(let i = -w; i < w + h; i += 15) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + h, h); ctx.stroke();
+    }
+    ctx.restore();
     ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.roundRect ? ctx.roundRect(w/2 - 70, h/2 - 25, 140, 50, 10) : ctx.fillRect(w/2 - 70, h/2 - 25, 140, 50);
+    if (ctx.roundRect) ctx.roundRect(w/2 - 70, h/2 - 25, 140, 50, 10); else ctx.fillRect(w/2 - 70, h/2 - 25, 140, 50);
     ctx.fill();
-
     ctx.fillStyle = "#57606f";
     ctx.font = "bold 16px Nunito";
     ctx.textAlign = "center";
@@ -1728,11 +1745,14 @@ let scratchEngine = {
 
 
   bindEvents() {
+    // 将监听器绑定到整个卡片容器，提升滑动体验（从标题区滑下来也能刮）
+    const container = document.querySelector('.scratch-card-container');
     const canvas = this.canvas;
+    
     const handler = (e) => {
       if (!this.isDrawing) return;
       e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect(); // 仍然相对于 canvas 计算坐标
       const scaleX = canvas.width / (rect.width * 2);
       const scaleY = canvas.height / (rect.height * 2);
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -1741,8 +1761,21 @@ let scratchEngine = {
       const y = (clientY - rect.top) * scaleY;
       this.scratch(x, y);
     };
-    canvas.addEventListener('mousedown', (e) => { this.isDrawing = true; this.lastX = e.offsetX; this.lastY = e.offsetY; });
-    canvas.addEventListener('touchstart', (e) => { this.isDrawing = true; const t = e.touches[0]; const r = canvas.getBoundingClientRect(); this.lastX = t.clientX - r.left; this.lastY = t.clientY - r.top; });
+
+    container.addEventListener('mousedown', (e) => { 
+      this.isDrawing = true; 
+      const rect = canvas.getBoundingClientRect();
+      this.lastX = (e.clientX - rect.left) * (canvas.width / (rect.width * 2));
+      this.lastY = (e.clientY - rect.top) * (canvas.height / (rect.height * 2));
+    });
+    container.addEventListener('touchstart', (e) => { 
+      this.isDrawing = true; 
+      const t = e.touches[0]; 
+      const rect = canvas.getBoundingClientRect(); 
+      this.lastX = (t.clientX - rect.left) * (canvas.width / (rect.width * 2));
+      this.lastY = (t.clientY - rect.top) * (canvas.height / (rect.height * 2));
+    }, { passive: false });
+
     window.addEventListener('mousemove', handler);
     window.addEventListener('touchmove', handler, { passive: false });
     const stop = () => { if(this.isDrawing) this.checkProgress(); this.isDrawing = false; };

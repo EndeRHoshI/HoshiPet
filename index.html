@@ -167,8 +167,16 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
   padding: 20px;
 }
 .scratch-card-container {
-  position: relative; width: 100%; max-width: 340px; aspect-ratio: 3/4.2;
-  background: #fdfdfd; border-radius: 24px; overflow: hidden;
+  width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 0;
+}
+.scratch-card-header {
+  background: #f8f9fa; border-radius: 20px 20px 0 0; padding: 15px;
+  text-align: center; border: 4px solid #ffd700; border-bottom: none;
+}
+.scratch-card-header-title { font-size: 20px; font-weight: 900; color: #2d3436; margin: 0; }
+.scratch-card-body {
+  position: relative; width: 100%; aspect-ratio: 3/3.5;
+  background: #fdfdfd; border-radius: 0 0 24px 24px; overflow: hidden;
   box-shadow: 0 25px 60px rgba(0,0,0,0.6);
   border: 8px solid #ffd700;
 }
@@ -180,6 +188,17 @@ body.bg-system { background:linear-gradient(160deg,#2d1b69 0%,#11092f 100%) fixe
 }
 .btn-scratch-retry { background: #ffd700; color: #000; font-weight: 900; }
 .btn-scratch-back  { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+.btn-scratch-claim { 
+  background: linear-gradient(135deg, #ffd700, #ff9f43); 
+  color: #000; font-weight: 900; 
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
 
 
 
@@ -899,8 +918,13 @@ input[type="range"] { width:110px; accent-color:var(--primary); }
     <!-- 游戏界面 -->
     <div class="scratch-game-view" id="scratchGameView">
       <div class="scratch-card-container">
-        <canvas id="scratchResultCanvas"></canvas>
-        <canvas id="scratchCanvas"></canvas>
+        <div class="scratch-card-header">
+          <h2 class="scratch-card-header-title" id="scratchCardTitle">奖票名称</h2>
+        </div>
+        <div class="scratch-card-body">
+          <canvas id="scratchResultCanvas"></canvas>
+          <canvas id="scratchCanvas"></canvas>
+        </div>
       </div>
       <div class="scratch-game-footer">
         <button class="btn btn-scratch-back" onclick="backToScratchLobby()">放弃这张</button>
