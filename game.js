@@ -598,17 +598,21 @@ document.addEventListener('touchstart', initHistoryTrap, { once: true, capture: 
 function switchScene(name, pushHistory = true) {
   initHistoryTrap(); 
   
-  // 独立商城页逻辑：进入商城隐藏底部 Tab，退出则显示
+  // 独立商城页 & 刮刮乐页逻辑：进入则隐藏底部 Tab，退出则显示
   const navBar = document.getElementById('navBar');
+  const hideNav = (name === 'shop' || name === 'scratch');
   if (navBar) {
-    navBar.style.display = (name === 'shop') ? 'none' : 'flex';
+    navBar.style.display = hideNav ? 'none' : 'flex';
   }
+
+  if (name === 'scratch') updateScratchGold();
 
   // Nav tabs only for main scenes
   const mainScenes = ['home', 'outing', 'system'];
 
-  // All scene ids (including sub-scenes like shop)
-  const allScenes = ['home', 'outing', 'system', 'shop'];
+
+  // All scene ids (including sub-scenes like shop, scratch)
+  const allScenes = ['home', 'outing', 'system', 'shop', 'scratch'];
   
   allScenes.forEach(s => {
     const sceneId = 'scene' + s.charAt(0).toUpperCase() + s.slice(1);
@@ -1447,4 +1451,338 @@ window.addEventListener('DOMContentLoaded', () => {
     switchScene(targetScene, false);
   });
 });
+
+// ── 刮刮乐系统逻辑 ──
+function updateScratchGold() {
+  const el = document.getElementById('scratchGoldVal');
+  if (el) el.textContent = gs.gold;
+}
+
+function exitScratchCenter() {
+  switchScene('outing');
+}
+
+function backToScratchLobby() {
+  document.getElementById('scratchLobby').style.display = 'block';
+  document.getElementById('scratchGameView').style.display = 'none';
+  if (scratchEngine) scratchEngine.destroy();
+}
+
+const SCRATCH_CONFIG = {
+  1: { name: '金币直冲', price: 10 },
+  2: { name: '幸运号码', price: 30 },
+  3: { name: '三连好运', price: 50 },
+  4: { name: '豪享大礼', price: 100 },
+  5: { name: '幸运九宫格', price: 200 }
+};
+
+function buyScratchCard(mode) {
+  const cfg = SCRATCH_CONFIG[mode];
+  if (gs.gold < cfg.price) {
+    showModal('🪙', '余额不足', '你的金币不够买这张卡哦，快去打工赚钱吧！', [{label:'知道啦', fn:closeModalDirect}]);
+    return;
+  }
+
+  gs.gold -= cfg.price;
+  updateUI();
+  updateScratchGold();
+  saveGame();
+
+  // 进入游戏界面
+  document.getElementById('scratchLobby').style.display = 'none';
+  document.getElementById('scratchGameView').style.display = 'flex';
+  
+  initScratchEngine(mode);
+}
+
+let scratchEngine = {
+  canvas: null, ctx: null, resultCanvas: null, resultCtx: null,
+  mode: 1, outcome: null, isRevealed: false, isDrawing: false, lastX: 0, lastY: 0,
+  
+  init(mode) {
+    this.mode = mode;
+    this.canvas = document.getElementById('scratchCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.resultCanvas = document.getElementById('scratchResultCanvas');
+    this.resultCtx = this.resultCanvas.getContext('2d');
+    
+    this.isRevealed = false;
+    this.isDrawing = false;
+    this.outcome = this.generateOutcome(mode);
+    
+    // 动态设置画布尺寸（高分辨率）
+    const rect = this.canvas.parentElement.getBoundingClientRect();
+    const dpr = 2; // Fixed high DPI
+    
+    [this.canvas, this.resultCanvas].forEach(canv => {
+      canv.width = rect.width * dpr;
+      canv.height = rect.height * dpr;
+    });
+    
+    this.ctx.scale(dpr, dpr);
+    this.resultCtx.scale(dpr, dpr);
+
+    this.renderResultLayer();
+    this.drawCoverLayer();
+    this.bindEvents();
+  },
+
+  destroy() {
+    if (!this.canvas) return;
+    // 重置画布内容并克隆节点以清除事件监听
+    const newScratch = this.canvas.cloneNode(true);
+    const newResult = this.resultCanvas.cloneNode(true);
+    this.canvas.parentNode.replaceChild(newScratch, this.canvas);
+    this.resultCanvas.parentNode.replaceChild(newResult, this.resultCanvas);
+    this.canvas = null; this.ctx = null;
+    this.resultCanvas = null; this.resultCtx = null;
+  },
+
+  generateOutcome(mode) {
+    const r = Math.random();
+    if (mode === 1) { // 金币直冲
+      let amount = 0;
+      if (r < 0.2) amount = 5;
+      else if (r < 0.4) amount = 10;
+      else if (r < 0.5) amount = 50;
+      else if (r < 0.51) amount = 200;
+      return { amount };
+    }
+    if (mode === 2) { // 幸运号码
+      const winNum = Math.floor(Math.random() * 90 + 10);
+      let myNums = [];
+      let total = 0;
+      for(let i=0; i<4; i++){
+        let num = Math.floor(Math.random() * 90 + 10);
+        while(num === winNum) num = Math.floor(Math.random() * 90 + 10);
+        let amt = (i+1) * 10 + Math.floor(Math.random()*20);
+        if (Math.random() < 0.25) { num = winNum; total += amt; }
+        myNums.push({ num, amt });
+      }
+      return { winNum, myNums, amount: total };
+    }
+    if (mode === 3) { // 三连好运
+      const symbols = ['🍎', '🍇', '🍊', '🍋', '🍒'];
+      const rows = [];
+      let total = 0;
+      for(let i=0; i<3; i++){
+        let s = [symbols[Math.floor(Math.random()*5)], symbols[Math.floor(Math.random()*5)], symbols[Math.floor(Math.random()*5)]];
+        let prize = (i+1) * 30;
+        let isWin = false;
+        let isDouble = false;
+        if (Math.random() < 0.2) {
+          const winSym = symbols[Math.floor(Math.random()*symbols.length)];
+          s = [winSym, winSym, winSym];
+          total += prize;
+          isWin = true;
+        } else if (Math.random() < 0.05) {
+          const winSym = symbols[Math.floor(Math.random()*symbols.length)];
+          s = [winSym, '福', winSym];
+          total += prize * 2;
+          isWin = true;
+          isDouble = true;
+        }
+        rows.push({ s, prize, isWin, isDouble });
+      }
+      return { rows, amount: total };
+    }
+    if (mode === 4) { // 豪享大礼
+      let total = 0;
+      let n = [Math.floor(Math.random()*10), Math.floor(Math.random()*10), Math.floor(Math.random()*10)];
+      if (Math.random() < 0.15) n = [n[0], n[0], n[0]];
+      if (n[0] === n[1] && n[1] === n[2]) total += 100;
+      let bSym = Math.random() < 0.1 ? '🏆' : '❌';
+      if (bSym === '🏆') total += 200;
+      return { a:n, b:bSym, amount: total };
+    }
+    if (mode === 5) { // 九宫格
+      const icons = ['💎', '🌟', '🎁', '🧧', '🍀'];
+      const grid = [];
+      for(let i=0; i<9; i++) grid.push(icons[Math.floor(Math.random()*icons.length)]);
+      let winIcon = null;
+      const counts = {}; grid.forEach(x => counts[x] = (counts[x]||0)+1);
+      Object.keys(counts).forEach(k => { if(counts[k]>=3) winIcon = k; });
+      let amount = 0;
+      if (winIcon === '💎') amount = 1000;
+      else if (winIcon === '🌟') amount = 500;
+      else if (winIcon) amount = 200;
+      return { grid, winIcon, amount };
+    }
+    return { amount: 0 };
+  },
+
+  renderResultLayer() {
+    const ctx = this.resultCtx;
+    const w = this.resultCanvas.width / 2;
+    const h = this.resultCanvas.height / 2;
+    
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, w, h);
+
+    const colors = { 1:'#fff9f0', 2:'#f0f7ff', 3:'#fff0f0', 4:'#f5f0ff', 5:'#f0fff4' };
+    ctx.fillStyle = colors[this.mode];
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#2d3436";
+    ctx.font = "bold 18px Nunito";
+    ctx.fillText(SCRATCH_CONFIG[this.mode].name, w/2, 30);
+
+    if (this.mode === 1) {
+      ctx.font = "bold 40px Nunito";
+      ctx.fillStyle = this.outcome.amount > 0 ? "#e17055" : "#b2bec3";
+      ctx.fillText(this.outcome.amount > 0 ? "🪙 " + this.outcome.amount : "谢谢参与", w/2, h/2);
+    } 
+    else if (this.mode === 2) {
+      ctx.font = "bold 10px Nunito"; ctx.fillText("中奖号码", w/2, 65);
+      ctx.fillStyle = "#ffd700"; ctx.beginPath(); ctx.arc(w/2, 95, 25, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = "#000"; ctx.font = "bold 24px Nunito"; ctx.fillText(this.outcome.winNum, w/2, 95);
+      this.outcome.myNums.forEach((m, i) => {
+        const x = (i % 2 === 0) ? w*0.3 : w*0.7;
+        const y = 170 + Math.floor(i/2) * 80;
+        ctx.fillStyle = (m.num === this.outcome.winNum) ? "#e17055" : "#2d3436";
+        ctx.font = "bold 22px Nunito"; ctx.fillText(m.num, x, y);
+        ctx.font = "bold 9px Nunito"; ctx.fillStyle = "#636e72"; ctx.fillText(m.amt + "G", x, y + 18);
+        if (m.num === this.outcome.winNum) {
+           ctx.font = "bold 10px Nunito"; ctx.fillStyle = "#e17055"; ctx.fillText("MATCH!", x, y - 20);
+        }
+      });
+    }
+    else if (this.mode === 3) {
+      this.outcome.rows.forEach((r, i) => {
+        const y = 90 + i * 85;
+        ctx.fillStyle = "rgba(0,0,0,0.05)"; ctx.fillRect(20, y-35, w-40, 70);
+        ctx.font = "32px Nunito"; ctx.fillText(r.s.join(" "), w/2 - 25, y);
+        ctx.font = "bold 12px Nunito"; ctx.fillStyle = r.isWin ? "#e17055" : "#636e72";
+        ctx.fillText(r.prize + "G", w-55, y);
+        if (r.isWin) {
+          ctx.strokeStyle = "#e17055"; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w-90, y); ctx.stroke();
+        }
+      });
+    }
+    else if (this.mode === 4) {
+      ctx.strokeStyle = "#dfe6e9"; ctx.strokeRect(20, 60, w-40, 110);
+      ctx.fillStyle = "#2d3436"; ctx.font = "bold 11px Nunito"; ctx.fillText("三数相同即中 100G", w/2, 75);
+      ctx.font = "bold 30px Nunito"; ctx.fillText(this.outcome.a.join(" "), w/2, 115);
+      if (this.outcome.a[0] === this.outcome.a[1] && this.outcome.a[1] === this.outcome.a[2]) {
+        ctx.fillStyle = "#e17055"; ctx.font = "bold 20px Nunito"; ctx.fillText("WIN!", w/2, 145);
+      }
+      ctx.strokeRect(20, 185, w-40, 110);
+      ctx.fillStyle = "#2d3436"; ctx.font = "bold 11px Nunito"; ctx.fillText("刮出🏆即中 200G", w/2, 200);
+      ctx.font = "50px Nunito"; ctx.fillText(this.outcome.b, w/2, 245);
+      if (this.outcome.b === '🏆') {
+        ctx.fillStyle = "#e17055"; ctx.font = "bold 20px Nunito"; ctx.fillText("WIN!", w/2, 275);
+      }
+    }
+    else if (this.mode === 5) {
+      ctx.strokeStyle = "#dfe6e9";
+      for(let i=1; i<3; i++) {
+        ctx.beginPath(); ctx.moveTo(i*w/3, 60); ctx.lineTo(i*w/3, h-20); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(20, 60 + i*(h-80)/3); ctx.lineTo(w-20, 60 + i*(h-80)/3); ctx.stroke();
+      }
+      this.outcome.grid.forEach((icon, i) => {
+        const x = (i % 3) * (w/3) + w/6;
+        const y = 60 + Math.floor(i / 3) * (h-80)/3 + (h-80)/6;
+        ctx.font = "36px Nunito"; ctx.fillText(icon, x, y);
+        if (this.outcome.winIcon === icon) {
+           ctx.strokeStyle = "rgba(225,112,85,0.3)"; ctx.lineWidth = 3;
+           ctx.strokeRect(x-w/6+5, y-(h-80)/6+5, w/3-10, (h-80)/3-10);
+        }
+      });
+    }
+  },
+
+
+  drawCoverLayer() {
+    const ctx = this.ctx;
+    const w = this.canvas.width / 2;
+    const h = this.canvas.height / 2;
+    
+    ctx.globalCompositeOperation = "source-over";
+    
+    // 主涂层颜色
+    ctx.fillStyle = "#dfe4ea";
+    ctx.fillRect(0, 0, w, h);
+    
+    // 绘制一些装饰性的斜纹或点阵
+    ctx.strokeStyle = "#ced6e0";
+    ctx.lineWidth = 1;
+    for(let i=-w; i<w+h; i+=15) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i+h, h); ctx.stroke();
+    }
+
+    // 绘制中间的 Logo 区域
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.roundRect ? ctx.roundRect(w/2 - 70, h/2 - 25, 140, 50, 10) : ctx.fillRect(w/2 - 70, h/2 - 25, 140, 50);
+    ctx.fill();
+
+    ctx.fillStyle = "#57606f";
+    ctx.font = "bold 16px Nunito";
+    ctx.textAlign = "center";
+    ctx.fillText("Hoshi Luck", w/2, h/2 - 2);
+    ctx.font = "8px Nunito";
+    ctx.fillText("SCRATCH ME!", w/2, h/2 + 12);
+  },
+
+
+  bindEvents() {
+    const canvas = this.canvas;
+    const handler = (e) => {
+      if (!this.isDrawing) return;
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / (rect.width * 2);
+      const scaleY = canvas.height / (rect.height * 2);
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = (clientX - rect.left) * scaleX;
+      const y = (clientY - rect.top) * scaleY;
+      this.scratch(x, y);
+    };
+    canvas.addEventListener('mousedown', (e) => { this.isDrawing = true; this.lastX = e.offsetX; this.lastY = e.offsetY; });
+    canvas.addEventListener('touchstart', (e) => { this.isDrawing = true; const t = e.touches[0]; const r = canvas.getBoundingClientRect(); this.lastX = t.clientX - r.left; this.lastY = t.clientY - r.top; });
+    window.addEventListener('mousemove', handler);
+    window.addEventListener('touchmove', handler, { passive: false });
+    const stop = () => { if(this.isDrawing) this.checkProgress(); this.isDrawing = false; };
+    window.addEventListener('mouseup', stop); window.addEventListener('touchend', stop);
+  },
+
+  scratch(x, y) {
+    if (this.isRevealed) return;
+    const ctx = this.ctx;
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = 40; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(this.lastX, this.lastY); ctx.lineTo(x, y); ctx.stroke();
+    this.lastX = x; this.lastY = y;
+  },
+
+  checkProgress() {
+    if (this.isRevealed) return;
+    const pixels = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+    let transparent = 0;
+    for (let i = 3; i < pixels.length; i += 4) { if (pixels[i] === 0) transparent++; }
+    if (transparent / (pixels.length / 4) > 0.5) this.revealAll();
+  },
+
+  revealAll() {
+    this.isRevealed = true;
+    this.ctx.globalCompositeOperation = 'destination-out';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    if (this.outcome.amount > 0) {
+      gs.gold += this.outcome.amount;
+      addLog(`✨ 刮刮乐中奖！获得了 ${this.outcome.amount} 金币奖励！`);
+      updateUI(); updateScratchGold(); saveGame();
+      showModal('🎉', '恭喜中奖', `你刮出了 <b style="color:#e17055;font-size:20px">${this.outcome.amount}</b> 金币！`, [{label:'收下', fn:() => { closeModalDirect(); backToScratchLobby(); }}]);
+    } else {
+      showModal('💨', '未中奖', '很遗憾，这张卡没有中奖，再接再厉吧！', [{label:'返回', fn:() => { closeModalDirect(); backToScratchLobby(); }}]);
+    }
+  }
+};
+
+function initScratchEngine(mode) {
+  scratchEngine.init(mode);
+}
+
 
